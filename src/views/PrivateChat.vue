@@ -32,20 +32,31 @@
 
             <div class="mesgs">
             <div class="msg_history">
-                <div v-for="messageObj in allMessages" :key="messageObj.id" >
-                    <div :class="[messageObj.author === authUser.displayName? 'sent_msg': 'received_msg']">
-                        <div class="received_withd_msg">
-                        <p>{{messageObj.message}}</p>
-                        <span class="time_date"> time | {{messageObj.author}}</span></div>
-                    </div>
+              
+              <div v-for="messageObj in allMessages" :key="messageObj.id">
+                <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
+                <div class="incoming_msg_img"> 
+                  <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
                 </div>
+                <div class="received_msg">
+                  <div class="received_withd_msg">
+                    <p>{{messageObj.message}}</p>
+                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
+                </div>
+              </div>
+              <div v-else-if="messageObj.author === authUser.displayName" class="outgoing_msg">
+                <div class="sent_msg">
+                  <p>{{messageObj.message}}</p>
+                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
+              </div>
+              </div>
                 
                 
             </div>
             <div class="type_msg">
                 <div class="input_msg_write">
                 <input @keyup.enter="saveMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
-                <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+                <button @click="saveMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
                 </div>
             </div>
             </div>
@@ -74,7 +85,7 @@ export default {
             //save message to firebase
             db.collection('chat').add({
                 message: this.message,
-                createdAt: new Date(),
+                createdAt: new Date().toUTCString(),
                 author: this.authUser.displayName
             }).then(()=>{
                 this.scrollToBottom();

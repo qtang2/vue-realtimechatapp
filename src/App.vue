@@ -1,13 +1,23 @@
 <template>
   <div id="app">
+    <sign-out></sign-out>
     <div id="nav">
       <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link> | 
+      <router-link to="/login">Login</router-link> |
+      <router-link to="/register">Register</router-link> |
+      <router-link to="/about">About</router-link> 
       <!-- <router-link to="/privatechat">Chat</router-link> -->
     </div>
     <router-view/>
   </div>
 </template>
+
+<script>
+import SignOut from './components/SignOut'
+export default {
+  components:{'sign-out': SignOut}
+}
+</script>
 
 <style>
 #app {
