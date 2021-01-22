@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <sign-out></sign-out>
+    <!-- <sign-out></sign-out> -->
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/login">Login</router-link> |
@@ -13,9 +13,9 @@
 </template>
 
 <script>
-import SignOut from './components/SignOut'
+// import SignOut from './components/SignOut'
 export default {
-  components:{'sign-out': SignOut}
+  // components:{'sign-out': SignOut}
 }
 </script>
 

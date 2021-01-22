@@ -1,32 +1,33 @@
 <template>
     <div class="container">
+      <sign-out></sign-out>
     <h3 class=" text-center">Messaging Chat pageee</h3>
     <div class="messaging">
         <div class="inbox_msg">
             <div class="inbox_people">
-            <div class="headind_srch">
-                <div class="recent_heading">
-                <h4>Recent</h4>
-                </div>
-                <div class="srch_bar">
-                <div class="stylish-input-group">
-                    <input type="text" class="search-bar"  placeholder="Search" >
-                    <span class="input-group-addon">
-                    <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-                    </span> </div>
-                </div>
-            </div>
+              <div class="headind_srch">
+                  <div class="recent_heading">
+                  <h4>Recent</h4>
+                  </div>
+                  <div class="srch_bar">
+                  <div class="stylish-input-group">
+                      <input type="text" class="search-bar"  placeholder="Search" >
+                      <span class="input-group-addon">
+                      <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
+                      </span> </div>
+                  </div>
+              </div>
             <div class="inbox_chat">
-                <div class="chat_list active_chat">
+              <div v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
                     <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
                     <div class="chat_ib">
-                    <h5>Sunil Rajput <span class="chat_date">Dec 25</span></h5>
+                    <h5>{{contact.displayName}} <span class="chat_date">Dec 25</span></h5>
                     <p>Test, which is a new approach to have all solutions 
                         astrology under one roof.</p>
                     </div>
                 </div>
-                </div>
+              </div>
             </div>
             </div>
 
@@ -55,8 +56,8 @@
             </div>
             <div class="type_msg">
                 <div class="input_msg_write">
-                <input @keyup.enter="saveMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
-                <button @click="saveMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+                <input @keyup.enter="sendMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
+                <button @click="sendMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
                 </div>
             </div>
             </div>
@@ -70,23 +71,51 @@
 
 <script>
 import firebase from 'firebase'
+import SignOut from '../components/SignOut'
 
 export default {
+  components:{'sign-out':SignOut},
     data(){
         return {
             message: null,
             allMessages: [],
-            authUser: {}
+            allContacts:[],
+            authUser: {},
+            reciever:{},
+            activeChatId: "",
+            chatHistory:[]
         }
     },
     methods:{
-        saveMessage(){
+      displayChatHistory(receiverObj){
+        console.log("display chat history ")
+        console.log("ids are " + receiverObj.displayName + ",  " + this.authUser.displayName)
+        this.receiver = receiverObj
+        //set current active chat 
+        this.activeChatId = this.receiver.id
+        console.log("now active chat Id is " + this.receiver.id)
+
+        //get chat history between two users and sort messages by 'createdAt property'
+        let chatHistory = this.allMessages.filter((messageObj) =>{
+          return messageObj.author == receiverObj.displayName || messageObj.receiver == receiverObj.displayName
+        })
+        console.log("chat history &&&&&", chatHistory)
+        this.chatHistory = chatHistory
+
+      },
+      setActive(){
+        this.activeChat = !this.activeChat
+      },
+
+      sendMessage(){
             // console.log('In saveMessage')
             //save message to firebase
+            console.log("sender name  is "+this.authUser.displayName + " and receiver name is " + this.receiver.displayName + " and the message is " + this.message)
             db.collection('chat').add({
                 message: this.message,
                 createdAt: new Date().toUTCString(),
-                author: this.authUser.displayName
+                author: this.authUser.displayName,
+                receiver: this.receiver.displayName
             }).then(()=>{
                 this.scrollToBottom();
             })
@@ -94,20 +123,65 @@ export default {
             
         },
         fetchMessages(){
-            db.collection('chat').orderBy('createdAt').onSnapshot((querySnapshots)=>{
-                // console.log(querySnapshots)
-                let allMessages = [];
-                querySnapshots.forEach(doc=>{
-                    // console.log(doc.data())
-                    allMessages.push(doc.data())})
-                this.allMessages = allMessages
-                console.log(this.allMessages)
+          console.log("fetch messages for current user " + this.authUser.displayName)
+          let allMessages = [];
 
-                setTimeout(()=>{
-                    this.scrollToBottom()
-                },500)
+          //fetch messages sent by current user
+          db.collection('chat')
+            .where("author", "==",this.authUser.displayName)
+            .onSnapshot((querySnapshots)=>{
+              querySnapshots.forEach(doc=>{
+                allMessages.push(doc.data())})
             })
+
+
+          //fetch messages received by current user
+          db.collection('chat')
+            .where("receiver", "==",this.authUser.displayName)
+            .onSnapshot((querySnapshots)=>{
+              querySnapshots.forEach(doc=>{
+                  allMessages.push(doc.data())})
+              
+
+              setTimeout(()=>{
+                  this.scrollToBottom()
+              },500)
+            })
+
+          this.allMessages = allMessages
+          console.log(this.allMessages)
             
+        },
+        fetchContacts(){
+          console.log('Fetch contacts')
+          // console.log(this.authUser.uid)
+          if(this.authUser.uid){
+            console.log('uid exxxxxxxxxxxxist  ' + this.authUser.uid)
+            db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').get()
+              .then((mycontacts)=>{
+                if(mycontacts){
+                  let allContacts = []
+                  mycontacts.forEach(d =>{
+                    // console.log("&&&&&&&&&&&&&&&&&&&& doc "+ d.id )
+                    // console.log(d.data())
+                    let contact = {
+                      displayName: d.data().displayName,
+                      id: d.id
+                    }
+                    allContacts.push(contact)
+                  })
+                  this.allContacts = allContacts
+                  console.log('Get all my contacts')
+                  console.log(this.allContacts)
+                  
+                }else{
+                  console.log('No such docs')
+                }
+              })
+          }else{
+            console.log("uid not exiiiiiiiiiiiiiiiist")
+          }
+          // db.collection('contacts')
         },
         scrollToBottom(){
             let box = document.querySelector('.msg_history');
@@ -119,15 +193,20 @@ export default {
             console.log("created")
             if(user){
                 this.authUser = user
-                console.log("********" + this.authUser.displayName)
+                console.log("(this.authUser set to user ")
+                console.log(this.authUser)
+                this.fetchContacts();
+                this.fetchMessages();
 
             }else{
                 console.log("no auth user at all" + this.authUser.displayName)
                 this.authUser = {}
             }
         })
-        this.fetchMessages();
+        // this.fetchMessages();
+        
     },
+    //Not allow user to enter the chat page if user is not authe
     beforeRouteEnter(to,from,next){
         next((vm) =>{
             firebase.auth().onAuthStateChanged((user)=>{

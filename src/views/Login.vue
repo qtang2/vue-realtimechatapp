@@ -1,4 +1,5 @@
 <template>
+
     <div>
         Login page
         <div class="login">
@@ -19,30 +20,7 @@
         </div>
         <div v-if="error">{{error}}</div>
         <span>Need an account, click here to <router-link to="/register">register </router-link> </span>
-        <!-- <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4">
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <form accept-charset="UTF-8" role="form">
-                            <fieldset>
-                                <div class="form-group">
-                                    <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text">
-                                </div>
-                                <div class="form-group">
-                                    <input v-model="password" class="form-control" placeholder="Password" name="password" type="password" autocomplete="off">
-                                </div>
-                                <input @click="loginWithEmail" class="btn btn-lg btn-success btn-block" type="submit" value="Login">
-                            </fieldset>
-                            </form>
-                            <hr/>
-                            <center><h4>OR</h4></center>
-                            <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with Google">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
+
     </div>
 </template>
 
@@ -72,6 +50,13 @@ export default {
                         var token = credential.accessToken;
                         // The signed-in user info.
                         var user = result.user;
+                        //add a user to users collection, Need to check if user already exist in users collection(no need, firebase wont add repeatly)
+                        db.collection('users').doc(user.uid).set({
+                            displayName: user.displayName,
+                            email: user.email,
+                            photoURL: user.photoURL
+                        })
+                        console.log('googllllllleeee user added to the user collection')
 
                         this.$router.push('/')
                         // ...
