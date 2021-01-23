@@ -36,7 +36,7 @@ export default {
         firebase.auth().onAuthStateChanged((user)=>{
             // this.loggedIn = !!user
             if(user){
-                console.log('Sign out MMMMMMMMM set to trueeeeeeee')
+                // console.log('Sign out MMMMMMMMM set to trueeeeeeee')
                 this.loggedIn = true
                 this.authUserName = user.displayName
             }else{

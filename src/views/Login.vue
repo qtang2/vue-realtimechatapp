@@ -56,7 +56,7 @@ export default {
                             email: user.email,
                             photoURL: user.photoURL
                         })
-                        console.log('googllllllleeee user added to the user collection')
+                        // console.log('googllllllleeee user added to the user collection')
 
                         this.$router.push('/')
                         // ...
@@ -74,10 +74,10 @@ export default {
         //TODO: Need to fix this function, it is not working now 
         loginWithEmail(){
             console.log('login with email' + this.email + ", " + this.password )
-            console.log("&&&&&&&&&&&&&&&&&&&")
+            // console.log("&&&&&&&&&&&&&&&&&&&")
             firebase.auth().signInWithEmailAndPassword(this.email, this.password)
                     .then((user) => {
-                        console.log(this.email + ", " + this.password)
+                        // console.log(this.email + ", " + this.password)
                         this.$router.replace('/')
                     })
                     .catch((error) => {

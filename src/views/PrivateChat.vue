@@ -89,18 +89,68 @@ export default {
     methods:{
       displayChatHistory(receiverObj){
         console.log("display chat history ")
-        console.log("ids are " + receiverObj.displayName + ",  " + this.authUser.displayName)
+        console.log("receiver and sender are " + receiverObj.displayName + ",  " + this.authUser.displayName)
         this.receiver = receiverObj
         //set current active chat 
         this.activeChatId = this.receiver.id
         console.log("now active chat Id is " + this.receiver.id)
+        
+        //get all messages from current userto chatter
+        db.collection('chat')
+          .where("author", "==",this.authUser.displayName)
+          .where("receiver", "==",receiverObj.displayName)
+          .onSnapshot((querySnapshots)=>{
+            let sentMsgs = []
+            querySnapshots.forEach(doc=>{
+              sentMsgs.push(doc.data())})
+      
+            this.allMessages = sentMsgs
+            console.log("all msgs after fetching sennnnnnnnt msgs ", this.allMessages)
 
-        //get chat history between two users and sort messages by 'createdAt property'
-        let chatHistory = this.allMessages.filter((messageObj) =>{
-          return messageObj.author == receiverObj.displayName || messageObj.receiver == receiverObj.displayName
-        })
-        console.log("chat history &&&&&", chatHistory)
-        this.chatHistory = chatHistory
+
+            //get all messages from current chatter to current user
+            db.collection('chat')
+              .where("author", "==",receiverObj.displayName)
+              .where("receiver", "==",this.authUser.displayName)
+              .onSnapshot((querySnapshots)=>{
+                let receivedMsgs = []
+                querySnapshots.forEach(doc=>{
+                  receivedMsgs.push(doc.data())})
+          
+                this.allMessages = this.allMessages.concat(receivedMsgs)
+                console.log("all msgs after fetching reccccccceiveddd msgs ", this.allMessages)
+
+                //sort all messages by created data
+                this.allMessages.sort((obj1,obj2)=>{
+                  
+                  if(Date.parse(obj1.createdAt) > Date.parse(obj2.createdAt)) return 1;
+                  if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
+                  return 0;
+                })
+                console.log("all msgs beeeeeefore ", this.allMessages)
+                console.log("all msgs after sooooooooooooooort ", this.allMessages)
+                
+            })
+          })
+
+
+        
+        // //get all messages from current chatter to current user
+        // db.collection('chat')
+        //   .where("author", "==",receiverObj.displayName)
+        //   .where("receiver", "==",this.authUser.displayName)
+        //   .onSnapshot((querySnapshots)=>{
+        //     let receivedMsgs = []
+        //     querySnapshots.forEach(doc=>{
+        //       receivedMsgs.push(doc.data())})
+      
+        //     this.allMessages = this.allMessages.concat(receivedMsgs)
+        //     console.log("all msgs after fetching reccccccceiveddd msgs ", this.allMessages)
+        //   })
+          
+          
+
+        
 
       },
       setActive(){
@@ -124,46 +174,51 @@ export default {
         },
         fetchMessages(){
           console.log("fetch messages for current user " + this.authUser.displayName)
-          let allMessages = [];
-
+          let allMessages = []
           //fetch messages sent by current user
+          let sentMsgs = []
           db.collection('chat')
             .where("author", "==",this.authUser.displayName)
             .onSnapshot((querySnapshots)=>{
               querySnapshots.forEach(doc=>{
-                allMessages.push(doc.data())})
+                sentMsgs.push(doc.data())})
             })
 
 
           //fetch messages received by current user
+          let receivedMsgs = []
+          console.log("rrrrrrrrrrrrrrrr  ", typeof receivedMsgs)
           db.collection('chat')
             .where("receiver", "==",this.authUser.displayName)
             .onSnapshot((querySnapshots)=>{
               querySnapshots.forEach(doc=>{
-                  allMessages.push(doc.data())})
+                  receivedMsgs.push(doc.data())})
               
 
-              setTimeout(()=>{
-                  this.scrollToBottom()
-              },500)
+              // setTimeout(()=>{
+              //     this.scrollToBottom()
+              // },500)
             })
 
+//TODO: the concat method not working , cannot get a complete array
+          allMessages = [].concat(sentMsgs,receivedMsgs);
+          console.log("sent msgggs type ", sentMsgs, "received msgs  ", typeof receivedMsgs)
+          console.log("all messages  ", allMessages)
           this.allMessages = allMessages
-          console.log(this.allMessages)
+
+          console.log("after fetching messages form db ", this.allMessages)
             
         },
         fetchContacts(){
           console.log('Fetch contacts')
           // console.log(this.authUser.uid)
           if(this.authUser.uid){
-            console.log('uid exxxxxxxxxxxxist  ' + this.authUser.uid)
+            // console.log('uid exxxxxxxxxxxxist  ' + this.authUser.uid)
             db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').get()
               .then((mycontacts)=>{
                 if(mycontacts){
                   let allContacts = []
                   mycontacts.forEach(d =>{
-                    // console.log("&&&&&&&&&&&&&&&&&&&& doc "+ d.id )
-                    // console.log(d.data())
                     let contact = {
                       displayName: d.data().displayName,
                       id: d.id
@@ -179,7 +234,7 @@ export default {
                 }
               })
           }else{
-            console.log("uid not exiiiiiiiiiiiiiiiist")
+            console.log("uid not exist")
           }
           // db.collection('contacts')
         },
@@ -194,12 +249,12 @@ export default {
             if(user){
                 this.authUser = user
                 console.log("(this.authUser set to user ")
-                console.log(this.authUser)
+                // console.log(this.authUser)
                 this.fetchContacts();
-                this.fetchMessages();
+                // this.fetchMessages();
 
             }else{
-                console.log("no auth user at all" + this.authUser.displayName)
+                console.log("no auth user at all")
                 this.authUser = {}
             }
         })

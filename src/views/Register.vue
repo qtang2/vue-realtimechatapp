@@ -39,7 +39,7 @@ export default {
                     .then((userCredential)=>{
                         
                         console.log('signed up successfully ')
-                        console.log(userCredential.user)
+                        // console.log(userCredential.user)
                         var user = userCredential.user
                         user.updateProfile({
                             displayName: this.username,
@@ -47,10 +47,10 @@ export default {
                         }).then(() =>{
                     
                         //set user display name 
-                        console.log("updated display name !!!!!!!!!!")
-                        var displayName = user.displayName;
-                        var photoURL = user.photoURL;
-                        console.log(user.uid + ", display Name is " + displayName + ", and email is " + user.email + ", and photoURL is " + photoURL)
+                        // console.log("updated display name !!!!!!!!!!")
+                        // var displayName = user.displayName;
+                        // var photoURL = user.photoURL;
+                        // console.log(user.uid + ", display Name is " + displayName + ", and email is " + user.email + ", and photoURL is " + photoURL)
 
                         //add a user to users collection
                         db.collection('users').doc(user.uid).set({
