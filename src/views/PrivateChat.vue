@@ -104,8 +104,8 @@ export default {
             querySnapshots.forEach(doc=>{
               sentMsgs.push(doc.data())})
       
-            this.allMessages = sentMsgs
-            console.log("all msgs after fetching sennnnnnnnt msgs ", this.allMessages)
+            // this.allMessages = sentMsgs
+            console.log("all msgs after fetching sennnnnnnnt msgs ", sentMsgs)
 
 
             //get all messages from current chatter to current user
@@ -117,7 +117,7 @@ export default {
                 querySnapshots.forEach(doc=>{
                   receivedMsgs.push(doc.data())})
           
-                this.allMessages = this.allMessages.concat(receivedMsgs)
+                this.allMessages = sentMsgs.concat(receivedMsgs)
                 console.log("all msgs after fetching reccccccceiveddd msgs ", this.allMessages)
 
                 //sort all messages by created data
@@ -129,26 +129,11 @@ export default {
                 })
                 console.log("all msgs beeeeeefore ", this.allMessages)
                 console.log("all msgs after sooooooooooooooort ", this.allMessages)
-                
             })
+
+            
           })
-
-
-        
-        // //get all messages from current chatter to current user
-        // db.collection('chat')
-        //   .where("author", "==",receiverObj.displayName)
-        //   .where("receiver", "==",this.authUser.displayName)
-        //   .onSnapshot((querySnapshots)=>{
-        //     let receivedMsgs = []
-        //     querySnapshots.forEach(doc=>{
-        //       receivedMsgs.push(doc.data())})
-      
-        //     this.allMessages = this.allMessages.concat(receivedMsgs)
-        //     console.log("all msgs after fetching reccccccceiveddd msgs ", this.allMessages)
-        //   })
-          
-          
+  
 
         
 
