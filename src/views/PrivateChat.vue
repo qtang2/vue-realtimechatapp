@@ -247,17 +247,17 @@ export default {
         
     },
     //Not allow user to enter the chat page if user is not authe
-    beforeRouteEnter(to,from,next){
-        next((vm) =>{
-            firebase.auth().onAuthStateChanged((user)=>{
-                if(user){
-                    next()
-                }else{
-                    vm.$router.push('/login')
-                }
-            })
-        })
-    }
+    // beforeRouteEnter(to,from,next){
+    //     next((vm) =>{
+    //         firebase.auth().onAuthStateChanged((user)=>{
+    //             if(user){
+    //                 next()
+    //             }else{
+    //                 vm.$router.push('/login')
+    //             }
+    //         })
+    //     })
+    // }
 }
 </script>
 

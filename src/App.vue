@@ -1,21 +1,31 @@
 <template>
   <div id="app">
-    <!-- <sign-out></sign-out> -->
-    <div id="nav">
+    <!-- <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/login">Login</router-link> |
       <router-link to="/register">Register</router-link> |
       <router-link to="/about">About</router-link> 
-      <!-- <router-link to="/privatechat">Chat</router-link> -->
-    </div>
+    </div> -->
     <router-view/>
   </div>
 </template>
 
 <script>
-// import SignOut from './components/SignOut'
+import firebase from 'firebase'
+
 export default {
   // components:{'sign-out': SignOut}
+  beforeMount(){
+    firebase.auth().onAuthStateChanged((user)=>{
+      if(!user){
+        console.log("No user at all, then go to login page")
+        this.$router.replace('/login')
+      }else if(this.route.path == '/login' || this.route.path == '/register'){
+        console.log("already logged in then go to home page")
+        this.$router.replace('/')
+      }
+    })
+  }
 }
 </script>
 
@@ -28,16 +38,4 @@ export default {
   color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
 </style>

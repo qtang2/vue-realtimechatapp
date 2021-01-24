@@ -1,27 +1,39 @@
 <template>
-
-    <div>
-        Login page
-        <div class="login">
-            <form @submit.prevent="loginWithEmail">
-                <div class="email">
-                    <label >Email: </label>
-                    <input v-model="email" type="email" placeholder="email">
-                </div>
-                <div class="password">
-                    <label >Password: </label>
-                    <input v-model="password" type="password" placeholder="password">
-                </div>
-                <button type="submit">Log In</button>
-            </form>
-            <hr/>
-            <center><h4>OR</h4></center>
-            <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with Google">
-        </div>
+<div class="outer-conatiner">
+    <div class="container">
         <div v-if="error">{{error}}</div>
-        <span>Need an account, click here to <router-link to="/register">register </router-link> </span>
-
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Login </h3>
+                    </div>
+                    <div class="panel-body">
+                        <form accept-charset="UTF-8" role="form" @submit.prevent="loginWithEmail">
+                        <fieldset>
+                            <div class="form-group">
+                                <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text" required>
+                                
+                            </div>
+                            <div class="form-group">
+                                <input v-model="password" class="form-control" placeholder="Password" name="password" type="password" value="" required>
+                            </div>
+                            
+                            <input class="btn btn-lg btn-success btn-block" type="submit" value="Login">
+                        </fieldset>
+                        </form>
+                        <span>Need an account, click here to <router-link to="/register">register</router-link> </span>
+                        <hr/>
+                        <center><h4>OR</h4></center>
+                        <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with google">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+    
 </template>
 
 <script>
@@ -71,7 +83,7 @@ export default {
                         // ...
                     });
         },
-        //TODO: Need to fix this function, it is not working now 
+        
         loginWithEmail(){
             console.log('login with email' + this.email + ", " + this.password )
             // console.log("&&&&&&&&&&&&&&&&&&&")
@@ -92,12 +104,22 @@ export default {
 </script>
 
 <style scoped>
+
+.container{
+    /* background-color: pink; */
+    /* display: flex;
+    align-items: center;
+    justify-content: center; */
+    margin-left: 35%;
+    padding: 4px;
+    /* width: 100%; */
+}
 .white{
     color:#000;
     background-color:#fff;
 }
 
-.btn-facebook {
+.btn-google {
     color: #ffffff;
     -webkit-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
@@ -115,20 +137,20 @@ export default {
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
-    .btn-facebook:hover,
-    .btn-facebook:focus,
-    .btn-facebook:active,
-    .btn-facebook.active,
-    .btn-facebook.disabled,
-    .btn-facebook[disabled] {
-        color: #ffffff;
-        background-color: #133783 !important;
-        *background-color: #102e6d !important;
-    }
+.btn-google:hover,
+.btn-google:focus,
+.btn-google:active,
+.btn-google.active,
+.btn-google.disabled,
+.btn-google[disabled] {
+    color: #ffffff;
+    background-color: #133783 !important;
+    *background-color: #102e6d !important;
+}
 
-    .btn-facebook:active,
-    .btn-facebook.active {
-        background-color: #0d2456 \9 !important;
-    }
+.btn-google:active,
+.btn-google.active {
+    background-color: #0d2456 \9 !important;
+}
 
 </style>
