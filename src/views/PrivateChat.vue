@@ -19,7 +19,7 @@
             <div v-if="searching" class="inbox_chat">
               <div v-for="contact in searchResults" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
-                    <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="profile image"> </div>
+                    <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
                     <div class="chat_ib">
                       <h5>{{contact.displayName}}</h5>
                       <p>Click to start chatting</p>
@@ -30,13 +30,47 @@
               <div v-else class="inbox_chat">
               <div v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
-                    <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="profile image"> </div>
+                    <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
                     <div class="chat_ib">
                       <h5>{{contact.displayName}}</h5>
                       <p>Click to start chatting</p>
                     </div>
                 </div>
               </div>
+            </div>
+            <div class="add_contact_container">
+              <button @click="showAddModal = true" class="add_contact_btn" type="button"><i class="fa fa-user-plus" aria-hidden=true></i></button>
+              <transition name="fade" appear>
+                <div class="modal-overlay" v-if="showAddModal">
+                  <div class="headind_srch">
+                    <div class="srch_bar">
+                      <div class="stylish-input-group">
+                        <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" >
+                        <span class="input-group-addon">
+                        <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="search_result_container">
+                    <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
+                      <div class="chat_people">
+                          <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                          <div class="chat_ib">
+                            <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
+                          </div>
+                          
+                      </div>
+                      
+                    </div>
+                    
+                  </div>
+                  <div class="close_btn_container">
+                    <button @click="closeModal">Cancle</button>
+                  </div>
+                  
+                </div>
+              </transition>
             </div>
             </div>
 
@@ -45,7 +79,7 @@
               <div v-for="messageObj in allMessages" :key="messageObj.id">
                 <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
-                    <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
+                    <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="sunil"> 
                   </div>
                   <div class="received_msg">
                     <div class="received_withd_msg">
@@ -96,10 +130,69 @@ export default {
             chatHistory:[],
             searching:false,
             searchText: "",
-            searchResults:[]
+            searchResults:[],
+            showAddModal: false,
+            foundUsers:[],
+            userToFind:""
+
         }
     },
     methods:{
+      findUser(){
+        console.log("we want to find userrrrr  " + this.userToFind)
+        db.collection('users')
+          .where("displayName","==",this.userToFind)
+          .get()
+          .then((users)=>{
+            if(users){
+                  let foundUsers = []
+                  users.forEach(d =>{
+                    // console.log("ddddd id  ", d.id)
+                    let foundUser = {
+                      id: d.id,
+                      displayName: d.data().displayName,
+                      email: d.data().email,
+                      photoURL: d.data().photoURL
+                    }
+                    foundUsers.push(foundUser)
+                  })
+                  this.foundUsers = foundUsers
+                  // this.searchResults = allContacts
+                  console.log('Found users ', this.foundUsers)
+                  
+                }else{
+                  console.log('Not found any user')
+                }
+          })
+      },
+      addContact(userToAdd){
+        console.log('add this id '+  this.authUser.uid + "a new contact , which is " + userToAdd.id)
+        //search in the db and then decide to add new contacts collection in db
+        let curUserRef = db.collection("contacts").doc(this.authUser.uid)
+        let newContactRef = curUserRef.collection('mycontacts').doc(userToAdd.id)
+
+        newContactRef.set({
+          displayName: userToAdd.displayName
+        })
+        .then(function() {
+            alert("Add new contact successfully")
+            console.log("Document successfully written!");
+            // close modal afer add contact
+            
+        })
+        .catch(function(error) {
+            console.error("Error writing document: ", error);
+        });
+
+        this.closeModal()
+
+        
+      },
+      closeModal(){
+        this.showAddModal = false
+        this.userToFind = ""
+        this.foundUsers = []
+      },
       searchContact(){
         console.log("searching someone " + this.searchText)
         this.searching = true
@@ -126,9 +219,6 @@ export default {
             let sentMsgs = []
             querySnapshots.forEach(doc=>{
               sentMsgs.push(doc.data())})
-      
-            // this.allMessages = sentMsgs
-            console.log("all msgs after fetching sennnnnnnnt msgs ", sentMsgs)
 
 
             //get all messages from current chatter to current user
@@ -141,7 +231,6 @@ export default {
                   receivedMsgs.push(doc.data())})
           
                 this.allMessages = sentMsgs.concat(receivedMsgs)
-                console.log("all msgs after fetching reccccccceiveddd msgs ", this.allMessages)
 
                 //sort all messages by created data
                 this.allMessages.sort((obj1,obj2)=>{
@@ -150,16 +239,11 @@ export default {
                   if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
                   return 0;
                 })
-                console.log("all msgs beeeeeefore ", this.allMessages)
-                console.log("all msgs after sooooooooooooooort ", this.allMessages)
+                
             })
 
             
           })
-  
-
-        
-
       },
       setActive(){
         this.activeChat = !this.activeChat
@@ -206,8 +290,6 @@ export default {
                   this.scrollToBottom()
               },500)
             })
-
-//TODO: the concat method not working , cannot get a complete array
           allMessages = [].concat(sentMsgs,receivedMsgs);
           console.log("sent msgggs type ", sentMsgs, "received msgs  ", typeof receivedMsgs)
           console.log("all messages  ", allMessages)
@@ -221,26 +303,25 @@ export default {
           // console.log(this.authUser.uid)
           if(this.authUser.uid){
             // console.log('uid exxxxxxxxxxxxist  ' + this.authUser.uid)
-            db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').get()
-              .then((mycontacts)=>{
-                if(mycontacts){
-                  let allContacts = []
-                  mycontacts.forEach(d =>{
+            db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
+              
+              if(querySnapshots){
+                let allContacts = []
+                querySnapshots.forEach(d =>{
                     let contact = {
                       displayName: d.data().displayName,
                       id: d.id
                     }
                     allContacts.push(contact)
                   })
-                  this.allContacts = allContacts
+                this.allContacts = allContacts
                   // this.searchResults = allContacts
-                  console.log('Get all my contacts')
-                  console.log(this.allContacts)
-                  
-                }else{
+                console.log('Get all my contacts')
+                console.log(this.allContacts)
+              }else{
                   console.log('No such docs')
-                }
-              })
+              }
+            })
           }else{
             console.log("uid not exist")
           }
@@ -285,10 +366,29 @@ export default {
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active{
+  transition: opacity 0.3s;
+}
+.fade-enter,
+.fade-leave-to{
+  opacity: 0;
+}
+.modal-overlay{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 98;
+  width: 80%;
+  height: 50%;
+  background-color: pink;
+}
 .container{max-width:1170px; margin:auto;}
 img{ max-width:100%;}
 .inbox_people {
-  background: #f8f8f8 none repeat scroll 0 0;
+  background: #f8f8f8 none repeat scroll 0 0; /* f8f8f8*/
   float: left;
   overflow: hidden;
   width: 40%; border-right:1px solid #c4c4c4;
@@ -413,6 +513,23 @@ img{ max-width:100%;}
 }
 
 .type_msg {border-top: 1px solid #c4c4c4;position: relative;}
+.add_contact_container{
+  background-color: #f8f8ff;
+}
+.add_contact_btn{
+  background: #05728f none repeat scroll 0 0;
+  border: medium none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 17px;
+  height: 33px;
+  left: 100;
+  width: 33px;
+
+}
+.add_contact_btn i{
+  color: white
+}
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
   border: medium none;
