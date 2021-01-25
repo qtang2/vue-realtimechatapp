@@ -1,30 +1,39 @@
 <template>
     <div class="container">
       <sign-out></sign-out>
-    <h3 class=" text-center">Messaging Chat pageee</h3>
     <div class="messaging">
         <div class="inbox_msg">
             <div class="inbox_people">
               <div class="headind_srch">
                   <div class="recent_heading">
-                  <h4>Recent</h4>
+                  <h4>Contacts</h4>
                   </div>
                   <div class="srch_bar">
                   <div class="stylish-input-group">
-                      <input type="text" class="search-bar"  placeholder="Search" >
+                      <input @keyup="searchContact" v-model="searchText" type="text" class="search-bar"  placeholder="Search by name" >
                       <span class="input-group-addon">
                       <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
                       </span> </div>
                   </div>
               </div>
-            <div class="inbox_chat">
+            <div v-if="searching" class="inbox_chat">
+              <div v-for="contact in searchResults" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
+                <div class="chat_people">
+                    <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="profile image"> </div>
+                    <div class="chat_ib">
+                      <h5>{{contact.displayName}}</h5>
+                      <p>Click to start chatting</p>
+                    </div>
+                </div>
+              </div>
+              </div>
+              <div v-else class="inbox_chat">
               <div v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
-                    <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="profile image"> </div>
                     <div class="chat_ib">
-                    <h5>{{contact.displayName}} <span class="chat_date">Dec 25</span></h5>
-                    <p>Test, which is a new approach to have all solutions 
-                        astrology under one roof.</p>
+                      <h5>{{contact.displayName}}</h5>
+                      <p>Click to start chatting</p>
                     </div>
                 </div>
               </div>
@@ -33,22 +42,23 @@
 
             <div class="mesgs">
             <div class="msg_history">
-              
               <div v-for="messageObj in allMessages" :key="messageObj.id">
                 <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
-                <div class="incoming_msg_img"> 
-                  <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
-                </div>
-                <div class="received_msg">
-                  <div class="received_withd_msg">
-                    <p>{{messageObj.message}}</p>
-                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
-                </div>
+                  <div class="incoming_msg_img"> 
+                    <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
+                  </div>
+                  <div class="received_msg">
+                    <div class="received_withd_msg">
+                      <p>{{messageObj.message}}</p>
+                      <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
+                      <br>
+                  </div>
               </div>
               <div v-else-if="messageObj.author === authUser.displayName" class="outgoing_msg">
                 <div class="sent_msg">
                   <p>{{messageObj.message}}</p>
-                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
+                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
+                </div>
               </div>
               </div>
                 
@@ -83,10 +93,23 @@ export default {
             authUser: {},
             reciever:{},
             activeChatId: "",
-            chatHistory:[]
+            chatHistory:[],
+            searching:false,
+            searchText: "",
+            searchResults:[]
         }
     },
     methods:{
+      searchContact(){
+        console.log("searching someone " + this.searchText)
+        this.searching = true
+        this.searchResults = this.allContacts.filter((contact) =>{
+          return contact.displayName.includes(this.searchText)
+        })
+        
+        console.log("search result  ", this.searchResults)
+
+      },
       displayChatHistory(receiverObj){
         console.log("display chat history ")
         console.log("receiver and sender are " + receiverObj.displayName + ",  " + this.authUser.displayName)
@@ -178,11 +201,10 @@ export default {
             .onSnapshot((querySnapshots)=>{
               querySnapshots.forEach(doc=>{
                   receivedMsgs.push(doc.data())})
-              
 
-              // setTimeout(()=>{
-              //     this.scrollToBottom()
-              // },500)
+              setTimeout(()=>{
+                  this.scrollToBottom()
+              },500)
             })
 
 //TODO: the concat method not working , cannot get a complete array
@@ -211,6 +233,7 @@ export default {
                     allContacts.push(contact)
                   })
                   this.allContacts = allContacts
+                  // this.searchResults = allContacts
                   console.log('Get all my contacts')
                   console.log(this.allContacts)
                   
@@ -301,20 +324,31 @@ img{ max-width:100%;}
 }
 .srch_bar .input-group-addon { margin: 0 0 0 -27px;}
 
-.chat_ib h5{ font-size:15px; color:#464646; margin:0 0 8px 0;}
+.chat_ib h5{ 
+  font-size:15px; 
+  color:#464646; 
+  margin:0 0 8px 0; 
+  /* background-color: pink;  */
+}
 .chat_ib h5 span{ font-size:13px; float:right;}
 .chat_ib p{ font-size:14px; color:#989898; margin:auto}
 .chat_img {
   float: left;
   width: 11%;
+  /* background-color: grey; */
 }
 .chat_ib {
   float: left;
   padding: 0 0 0 15px;
   width: 88%;
+  /* margin-top: 3.5%; */
 }
 
-.chat_people{ overflow:hidden; clear:both;}
+.chat_people{ 
+  overflow:hidden; 
+  clear:both;
+   /* background-color: hotpink; */
+}
 .chat_list {
   border-bottom: 1px solid #c4c4c4;
   margin: 0;

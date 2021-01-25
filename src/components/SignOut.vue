@@ -1,9 +1,10 @@
 <template>
-  <div>
-      Logged In 
-      <span v-if="loggedIn"> Yes, Welcome, {{authUserName}} </span>
-      <span v-else>{{loggedIn}} No </span>
-      <button @click="signOut">Sign Out</button>
+  <div class="signout-head"> 
+      <span class="welcome" v-if="loggedIn">Welcome, {{authUserName}} </span>
+      <span v-else class="welcome">Please Log in </span>
+      <button type="button" class="btn btn-link" @click="signOut">Sign Out</button>
+    
+      
   </div>
 </template>
 
@@ -49,5 +50,16 @@ export default {
 </script>
 
 <style>
+.signout-head{
+    display: flex;
+    margin-left: 75%;
+    /* background-color: pink; */
+
+}
+.signout-head span{
+    align-self: center;
+    /* background-color: green; */
+}
+
 
 </style>
