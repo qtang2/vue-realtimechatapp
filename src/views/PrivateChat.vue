@@ -4,16 +4,20 @@
     <div class="messaging">
         <div class="inbox_msg">
             <div class="inbox_people">
-              <div class="headind_srch">
+              <div class="heading_srch">
                   <div class="recent_heading">
                   <h4>Contacts</h4>
                   </div>
                   <div class="srch_bar">
-                  <div class="stylish-input-group">
-                      <input @keyup="searchContact" v-model="searchText" type="text" class="search-bar"  placeholder="Search by name" >
-                      <span class="input-group-addon">
-                      <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-                      </span> </div>
+                    <div class="stylish-input-group">
+                        <input @keyup="searchContact" v-model="searchText" type="text" class="search-bar"  placeholder="Search " >
+                        <span class="input-group-addon">
+                        <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button> 
+                        
+                        </span> 
+                    </div>
+                    <button  @click="showAddModal = true" class="add_contact_btn" type="button"><i class="fa fa-user-plus" aria-hidden=true></i></button>
+                    
                   </div>
               </div>
             <div v-if="searching" class="inbox_chat">
@@ -26,52 +30,51 @@
                     </div>
                 </div>
               </div>
-              </div>
+            </div>
               <div v-else class="inbox_chat">
-              <div v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
-                <div class="chat_people">
-                    <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
-                    <div class="chat_ib">
-                      <h5>{{contact.displayName}}</h5>
-                      <p>Click to start chatting</p>
-                    </div>
-                </div>
-              </div>
-            </div>
-            <div class="add_contact_container">
-              <button @click="showAddModal = true" class="add_contact_btn" type="button"><i class="fa fa-user-plus" aria-hidden=true></i></button>
-              <transition name="fade" appear>
-                <div class="modal-overlay" v-if="showAddModal">
-                  <div class="headind_srch">
-                    <div class="srch_bar">
-                      <div class="stylish-input-group">
-                        <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" >
-                        <span class="input-group-addon">
-                        <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="search_result_container">
-                    <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
-                      <div class="chat_people">
-                          <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
-                          <div class="chat_ib">
-                            <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
+                <div class="add_contact_container" v-if="showAddModal">
+                  <transition name="fade" appear>
+                    <div class="modal-overlay" >
+                      <div class="heading_srch">
+                        <div class="srch_bar">
+                          <div class="stylish-input-group">
+                            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" >
+                            <span class="input-group-addon">
+                            <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
+                            </span>
                           </div>
+                          <button @click="closeModal" class="close_add_btn" type="button"><i class="fa fa-window-close" aria-hidden="true"></i></button>
                           
+                        </div>
                       </div>
-                      
+                      <div class="search_result_container">
+                        <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
+                          <div class="chat_people">
+                              <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                              <div class="chat_ib">
+                                <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
+                              </div>
+                          </div>
+                        </div>
+                        <p v-if="hintMsg.length > 0">{{hintMsg}}</p>
+                      </div>
+                        
                     </div>
-                    
-                  </div>
-                  <div class="close_btn_container">
-                    <button @click="closeModal">Cancle</button>
-                  </div>
-                  
+                  </transition>
                 </div>
-              </transition>
+
+                <div v-else v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
+                  <div class="chat_people">
+                      <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                      <div class="chat_ib">
+                        <h5>{{contact.displayName}}</h5>
+                        <p>Click to start chatting</p>
+                      </div>
+                  </div>
+                </div>
+                
             </div>
+            
             </div>
 
             <div class="mesgs">
@@ -133,17 +136,20 @@ export default {
             searchResults:[],
             showAddModal: false,
             foundUsers:[],
-            userToFind:""
+            userToFind:"",
+            hintMsg: ""
 
         }
     },
     methods:{
       findUser(){
+        this.hintMsg = ""
         console.log("we want to find userrrrr  " + this.userToFind)
         db.collection('users')
           .where("displayName","==",this.userToFind)
           .get()
-          .then((users)=>{
+          .then((users)=>{ //
+            console.log(users)
             if(users){
                   let foundUsers = []
                   users.forEach(d =>{
@@ -158,9 +164,15 @@ export default {
                   })
                   this.foundUsers = foundUsers
                   // this.searchResults = allContacts
+                  //Only one result cound be found 
+                  if(this.foundUsers.length<1){
+                    this.hintMsg = "Sorry, user not exist"
+                    console.log('Sorry, user not exist')
+                  }
                   console.log('Found users ', this.foundUsers)
                   
                 }else{
+                  
                   console.log('Not found any user')
                 }
           })
@@ -171,20 +183,43 @@ export default {
         let curUserRef = db.collection("contacts").doc(this.authUser.uid)
         let newContactRef = curUserRef.collection('mycontacts').doc(userToAdd.id)
 
-        newContactRef.set({
-          displayName: userToAdd.displayName
-        })
-        .then(function() {
-            alert("Add new contact successfully")
-            console.log("Document successfully written!");
-            // close modal afer add contact
-            
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
+        newContactRef.get()
+          .then((docSnapshot)=>{
+            if(docSnapshot.exists){
+              console.log("exist")
+              alert("Contact already added")
+            }else{
+              console.log("not exist")
+              newContactRef.set({
+                displayName: userToAdd.displayName
+              })
+              .then(function() {
+                  alert("New contact added successfully")
+                  console.log("Document successfully written!");
+                  // close modal afer add contact
+              })
+              .catch(function(error) {
+                  console.error("Error writing document: ", error);
+              });
+              this.closeModal()
+            }
+          })
 
-        this.closeModal()
+
+        // newContactRef.set({
+        //   displayName: userToAdd.displayName
+        // })
+        // .then(function() {
+        //     alert("Add new contact successfully")
+        //     console.log("Document successfully written!");
+        //     // close modal afer add contact
+            
+        // })
+        // .catch(function(error) {
+        //     console.error("Error writing document: ", error);
+        // });
+
+        
 
         
       },
@@ -192,6 +227,7 @@ export default {
         this.showAddModal = false
         this.userToFind = ""
         this.foundUsers = []
+        this.hintMsg = ""
       },
       searchContact(){
         console.log("searching someone " + this.searchText)
@@ -350,18 +386,7 @@ export default {
         // this.fetchMessages();
         
     },
-    //Not allow user to enter the chat page if user is not authe
-    // beforeRouteEnter(to,from,next){
-    //     next((vm) =>{
-    //         firebase.auth().onAuthStateChanged((user)=>{
-    //             if(user){
-    //                 next()
-    //             }else{
-    //                 vm.$router.push('/login')
-    //             }
-    //         })
-    //     })
-    // }
+    
 }
 </script>
 
@@ -374,16 +399,23 @@ export default {
 .fade-leave-to{
   opacity: 0;
 }
+.close_add_btn{
+  background: #f8f8f8 none repeat scroll 0 0;
+  border: medium none;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 33px;
+  left: 100;
+  width: 33px;
+  margin-left: 15px;
+  outline:none;
+}
+.close_add_btn i{
+  color: rgb(243, 67, 97);
+  font-size: 22px;
+}
 .modal-overlay{
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 98;
-  width: 80%;
-  height: 50%;
-  background-color: pink;
+  background-color: #f8f8f8;
 }
 .container{max-width:1170px; margin:auto;}
 img{ max-width:100%;}
@@ -403,24 +435,25 @@ img{ max-width:100%;}
 
 .recent_heading {float: left; width:40%;}
 .srch_bar {
-  display: inline-block;
+  display: flex;
   text-align: right;
-  width: 60%; padding:
+  width: 60%; 
 }
-.headind_srch{ padding:10px 29px 10px 20px; overflow:hidden; border-bottom:1px solid #c4c4c4;}
+.heading_srch{ padding:10px 29px 10px 20px; overflow:hidden; border-bottom:1px solid #c4c4c4;}
 
 .recent_heading h4 {
   color: #05728f;
   font-size: 21px;
   margin: auto;
 }
-.srch_bar input{ border:1px solid #cdcdcd; border-width:0 0 1px 0; width:80%; padding:2px 0 4px 6px; background:none;}
+.srch_bar input{ border:1px solid #cdcdcd; border-width:0 0 1px 0; width:100%; padding:2px 0 4px 6px; background:none;}
 .srch_bar .input-group-addon button {
   background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
   border: medium none;
   padding: 0;
   color: #707070;
   font-size: 18px;
+  outline:none;
 }
 .srch_bar .input-group-addon { margin: 0 0 0 -27px;}
 
@@ -454,7 +487,7 @@ img{ max-width:100%;}
   margin: 0;
   padding: 18px 16px 10px;
 }
-.inbox_chat { height: 550px; overflow-y: scroll;}
+.inbox_chat { height: 550px; overflow-y: scroll;position: relative;}
 
 .active_chat{ background:#ebebeb;}
 
@@ -513,9 +546,7 @@ img{ max-width:100%;}
 }
 
 .type_msg {border-top: 1px solid #c4c4c4;position: relative;}
-.add_contact_container{
-  background-color: #f8f8ff;
-}
+
 .add_contact_btn{
   background: #05728f none repeat scroll 0 0;
   border: medium none;
@@ -525,11 +556,13 @@ img{ max-width:100%;}
   height: 33px;
   left: 100;
   width: 33px;
+  margin-left: 15px;
 
 }
 .add_contact_btn i{
-  color: white
+  color: #f8f8f8
 }
+
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
   border: medium none;
