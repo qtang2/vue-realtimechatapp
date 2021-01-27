@@ -25,7 +25,7 @@
                         
                         </span> 
                     </div>
-                    <button  @click="showAddModal = true" class="add_contact_btn" type="button"><i class="fa fa-user-plus" aria-hidden=true></i></button>
+                    <button  @click="showAddModal=true" class="add_contact_btn" type="button"><i class="fa fa-user-plus" aria-hidden=true></i></button>
                     
                   </div>
               </div>
@@ -59,7 +59,7 @@
                       <div class="search_result_container">
                         <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
                           <div class="chat_people">
-                              <div class="chat_img"> <img :src="userToAdd.photoURL"> </div>
+                              <div class="chat_img"> <img :src="userToAdd.photoURL? userToAdd.photoURL: defaultPhotoURL"> </div>
                               <div class="chat_ib">
                                 <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
                               </div>
