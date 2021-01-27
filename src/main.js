@@ -33,6 +33,8 @@ window.db = db;
 db.settings({
   timestampsInSnapshots:true
 })
+
+
 new Vue({
   router,
   store,

@@ -1,7 +1,17 @@
 <template>
     <div class="container">
       <sign-out></sign-out>
-    <div class="messaging">
+      <div v-if="showDeleteModal" class="delete_contact_container">
+          <transition name="fade" appear>
+            <div>
+              <p>Delete ' {{toDeleteContact.displayName}} ' ? </p>
+              <button class="btn btn-danger btn-sm" type="button" @click="deleteContact">Delete</button>
+              <button class="btn btn-default btn-sm" type="button" @click="closeDeleteModal">Cancel</button>
+            </div>
+          </transition>
+        </div>
+      <div class="messaging" :class="{hide_page: showDeleteModal}" >
+        
         <div class="inbox_msg">
             <div class="inbox_people">
               <div class="heading_srch">
@@ -31,14 +41,14 @@
                 </div>
               </div>
             </div>
-              <div v-else class="inbox_chat">
+            <div v-else class="inbox_chat">
                 <div class="add_contact_container" v-if="showAddModal">
                   <transition name="fade" appear>
                     <div class="modal-overlay" >
                       <div class="heading_srch">
                         <div class="srch_bar">
                           <div class="stylish-input-group">
-                            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" >
+                            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" @keyup.enter="findUser">
                             <span class="input-group-addon">
                             <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
                             </span>
@@ -63,14 +73,17 @@
                   </transition>
                 </div>
 
-                <div v-else v-for="contact in allContacts" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
-                  <div class="chat_people">
+                <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatId}" >
+                  <!-- <div class="chat_people" @click="displayChatHistory(contact)"> -->
+                  <div class="chat_people" >
                       <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
                       <div class="chat_ib">
                         <h5>{{contact.displayName}}</h5>
                         <p>Click to start chatting</p>
-                      </div>
+                        <!-- <button class="delete_contact_btn" type="button" v-longpress="deleteContact"><i class="fas fa-trash-alt" aria-hidden="true"></i></button> -->
+                      </div> 
                   </div>
+                  
                 </div>
                 
             </div>
@@ -109,11 +122,8 @@
             </div>
             </div>
         </div>
-        
-      
-      
-      
-    </div></div>
+      </div>
+    </div>
 </template>
 
 <script>
@@ -135,21 +145,51 @@ export default {
             searchText: "",
             searchResults:[],
             showAddModal: false,
+            showDeleteModal:false,
             foundUsers:[],
             userToFind:"",
-            hintMsg: ""
+            hintMsg: "",
+            pressTime: 0,
+            mousedownTime:null,
+            mouseupTime:null,
+            toDeleteContact:{}
 
         }
     },
     methods:{
+      startTiming(){
+        this.mousedownTime = new Date().getTime();
+      },
+      endTiming(contact){
+        this.mouseupTime = new Date().getTime();
+        if((this.mouseupTime - this.mousedownTime) > 500){
+          console.log("longpresssssss to delete")
+          this.showDeleteModal = true
+          this.toDeleteContact = contact
+          // this.deleteContact(contact)
+        }else{
+          this.displayChatHistory(contact)
+        }
+      },
+      deleteContact(){
+        console.log('wanna delete contact ' + this.toDeleteContact.id + " for current user "+ this.authUser.uid)
+
+        db.collection("contacts").doc(this.authUser.uid).collection('mycontacts').doc(this.toDeleteContact.id).delete().then(function() {
+          alert("Contact successfully deleted!")
+          console.log("Document successfully deleted!");
+        }).catch(function(error) {
+            console.error("Error removing document: ", error);
+        });
+        this.closeDeleteModal()
+        
+      },
       findUser(){
         this.hintMsg = ""
         console.log("we want to find userrrrr  " + this.userToFind)
         db.collection('users')
           .where("displayName","==",this.userToFind)
           .get()
-          .then((users)=>{ //
-            console.log(users)
+          .then((users)=>{ 
             if(users){
                   let foundUsers = []
                   users.forEach(d =>{
@@ -172,7 +212,6 @@ export default {
                   console.log('Found users ', this.foundUsers)
                   
                 }else{
-                  
                   console.log('Not found any user')
                 }
           })
@@ -203,23 +242,7 @@ export default {
               });
               this.closeModal()
             }
-          })
-
-
-        // newContactRef.set({
-        //   displayName: userToAdd.displayName
-        // })
-        // .then(function() {
-        //     alert("Add new contact successfully")
-        //     console.log("Document successfully written!");
-        //     // close modal afer add contact
-            
-        // })
-        // .catch(function(error) {
-        //     console.error("Error writing document: ", error);
-        // });
-
-        
+          })      
 
         
       },
@@ -229,23 +252,25 @@ export default {
         this.foundUsers = []
         this.hintMsg = ""
       },
+      closeDeleteModal(){
+        this.showDeleteModal = false
+        this.toDeleteContact = {}
+        
+      },
       searchContact(){
         console.log("searching someone " + this.searchText)
         this.searching = true
         this.searchResults = this.allContacts.filter((contact) =>{
           return contact.displayName.includes(this.searchText)
         })
-        
-        console.log("search result  ", this.searchResults)
 
       },
       displayChatHistory(receiverObj){
-        console.log("display chat history ")
-        console.log("receiver and sender are " + receiverObj.displayName + ",  " + this.authUser.displayName)
+        // console.log("receiver and sender are " + receiverObj.displayName + ",  " + this.authUser.displayName)
         this.receiver = receiverObj
         //set current active chat 
         this.activeChatId = this.receiver.id
-        console.log("now active chat Id is " + this.receiver.id)
+        // console.log("now active chat Id is " + this.receiver.id)
         
         //get all messages from current userto chatter
         db.collection('chat')
@@ -269,8 +294,7 @@ export default {
                 this.allMessages = sentMsgs.concat(receivedMsgs)
 
                 //sort all messages by created data
-                this.allMessages.sort((obj1,obj2)=>{
-                  
+                this.allMessages.sort((obj1,obj2)=>{                  
                   if(Date.parse(obj1.createdAt) > Date.parse(obj2.createdAt)) return 1;
                   if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
                   return 0;
@@ -288,7 +312,6 @@ export default {
       sendMessage(){
             // console.log('In saveMessage')
             //save message to firebase
-            console.log("sender name  is "+this.authUser.displayName + " and receiver name is " + this.receiver.displayName + " and the message is " + this.message)
             db.collection('chat').add({
                 message: this.message,
                 createdAt: new Date().toUTCString(),
@@ -301,7 +324,6 @@ export default {
             
         },
         fetchMessages(){
-          console.log("fetch messages for current user " + this.authUser.displayName)
           let allMessages = []
           //fetch messages sent by current user
           let sentMsgs = []
@@ -315,7 +337,6 @@ export default {
 
           //fetch messages received by current user
           let receivedMsgs = []
-          console.log("rrrrrrrrrrrrrrrr  ", typeof receivedMsgs)
           db.collection('chat')
             .where("receiver", "==",this.authUser.displayName)
             .onSnapshot((querySnapshots)=>{
@@ -327,11 +348,7 @@ export default {
               },500)
             })
           allMessages = [].concat(sentMsgs,receivedMsgs);
-          console.log("sent msgggs type ", sentMsgs, "received msgs  ", typeof receivedMsgs)
-          console.log("all messages  ", allMessages)
           this.allMessages = allMessages
-
-          console.log("after fetching messages form db ", this.allMessages)
             
         },
         fetchContacts(){
@@ -352,8 +369,6 @@ export default {
                   })
                 this.allContacts = allContacts
                   // this.searchResults = allContacts
-                console.log('Get all my contacts')
-                console.log(this.allContacts)
               }else{
                   console.log('No such docs')
               }
@@ -373,7 +388,6 @@ export default {
             console.log("created")
             if(user){
                 this.authUser = user
-                console.log("(this.authUser set to user ")
                 // console.log(this.authUser)
                 this.fetchContacts();
                 // this.fetchMessages();
@@ -391,6 +405,23 @@ export default {
 </script>
 
 <style scoped>
+.hide_page{
+  opacity: 60%;
+  pointer-events:none;
+}
+.delete_contact_container{
+  background-color: #e0dddd;
+  width: 30%;
+  height: 15%;
+  position: absolute;
+  bottom: 50%;
+  right: 61%;
+  z-index: 101;
+  padding: 10px;
+}
+.delete_contact_container button{
+  margin-right: 10px;
+}
 .fade-enter-active,
 .fade-leave-active{
   transition: opacity 0.3s;
@@ -475,17 +506,26 @@ img{ max-width:100%;}
   padding: 0 0 0 15px;
   width: 88%;
   /* margin-top: 3.5%; */
+  /* background-color: teal; */
 }
 
 .chat_people{ 
   overflow:hidden; 
   clear:both;
-   /* background-color: hotpink; */
+  /* background-color: hotpink; */
+}
+.chat_delete{
+  float: left;
+  padding: 0 0 0 15px;
+  width: 88%;
+  background-color: tomato;
+  /* display: inline-block; */
 }
 .chat_list {
   border-bottom: 1px solid #c4c4c4;
   margin: 0;
   padding: 18px 16px 10px;
+  /* background-color: teal; */
 }
 .inbox_chat { height: 550px; overflow-y: scroll;position: relative;}
 
@@ -557,6 +597,19 @@ img{ max-width:100%;}
   left: 100;
   width: 33px;
   margin-left: 15px;
+  outline: none;
+}
+.delete_contact_btn{
+  background: tomato none repeat scroll 0 0;
+  border: medium none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 17px;
+  height: 33px;
+  /* left: 100; */
+  width: 33px;
+  margin-top: 0px;
+  float: right;
 
 }
 .add_contact_btn i{
