@@ -11,7 +11,6 @@
           </transition>
         </div>
       <div class="messaging" :class="{hide_page: showDeleteModal}" >
-        
         <div class="inbox_msg">
             <div class="inbox_people">
               <div class="heading_srch">
@@ -33,7 +32,7 @@
             <div v-if="searching" class="inbox_chat">
               <div v-for="contact in searchResults" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
-                    <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                    <div class="chat_img"> <img :src="contact.photoURL" alt="profile image"> </div>
                     <div class="chat_ib">
                       <h5>{{contact.displayName}}</h5>
                       <p>Click to start chatting</p>
@@ -60,7 +59,7 @@
                       <div class="search_result_container">
                         <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
                           <div class="chat_people">
-                              <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                              <div class="chat_img"> <img :src="userToAdd.photoURL"> </div>
                               <div class="chat_ib">
                                 <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
                               </div>
@@ -74,13 +73,11 @@
                 </div>
 
                 <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatId}" >
-                  <!-- <div class="chat_people" @click="displayChatHistory(contact)"> -->
                   <div class="chat_people" >
-                      <div class="chat_img"> <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="profile image"> </div>
+                      <div class="chat_img"> <img :src="contact.photoURL" alt="profile image"> </div>
                       <div class="chat_ib">
                         <h5>{{contact.displayName}}</h5>
                         <p>Click to start chatting</p>
-                        <!-- <button class="delete_contact_btn" type="button" v-longpress="deleteContact"><i class="fas fa-trash-alt" aria-hidden="true"></i></button> -->
                       </div> 
                   </div>
                   
@@ -95,12 +92,14 @@
               <div v-for="messageObj in allMessages" :key="messageObj.id">
                 <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
-                    <img src="https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png" alt="sunil"> 
+                    <img :src="messageObj.authorPhotoURL? messageObj.authorPhotoURL: defaultPhotoURL" alt="profile img"> 
                   </div>
                   <div class="received_msg">
                     <div class="received_withd_msg">
                       <p>{{messageObj.message}}</p>
-                      <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span></div>
+                      <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
+                      <!-- <span class="time_date"> {{messageObj.authorPhotoURL}} | {{messageObj.author}}</span> -->
+                    </div>
                       <br>
                   </div>
               </div>
@@ -152,8 +151,8 @@ export default {
             pressTime: 0,
             mousedownTime:null,
             mouseupTime:null,
-            toDeleteContact:{}
-
+            toDeleteContact:{},
+            defaultPhotoURL: "https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png"
         }
     },
     methods:{
@@ -166,7 +165,6 @@ export default {
           console.log("longpresssssss to delete")
           this.showDeleteModal = true
           this.toDeleteContact = contact
-          // this.deleteContact(contact)
         }else{
           this.displayChatHistory(contact)
         }
@@ -193,7 +191,6 @@ export default {
             if(users){
                   let foundUsers = []
                   users.forEach(d =>{
-                    // console.log("ddddd id  ", d.id)
                     let foundUser = {
                       id: d.id,
                       displayName: d.data().displayName,
@@ -266,20 +263,39 @@ export default {
 
       },
       displayChatHistory(receiverObj){
-        // console.log("receiver and sender are " + receiverObj.displayName + ",  " + this.authUser.displayName)
-        this.receiver = receiverObj
+
+        this.allMessages = []
         //set current active chat 
+        this.receiver = receiverObj
         this.activeChatId = this.receiver.id
-        // console.log("now active chat Id is " + this.receiver.id)
-        
-        //get all messages from current userto chatter
+        console.log(" now active id is " + this.activeChatId)
+        //get all messages from current user to chatter
         db.collection('chat')
           .where("author", "==",this.authUser.displayName)
           .where("receiver", "==",receiverObj.displayName)
           .onSnapshot((querySnapshots)=>{
             let sentMsgs = []
             querySnapshots.forEach(doc=>{
-              sentMsgs.push(doc.data())})
+              let msgObj = doc.data()
+              let author = doc.data().author
+              db.collection('users')
+                .where('displayName','==',author)
+                .onSnapshot((users)=>{
+                  if(users){
+                    users.forEach(u =>{
+                      // console.log('uuuuuuuuuuuuu', u.data())
+                      msgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
+                    })
+                  }else{
+                    console.log("NOOOOOOOOOO users")
+                  }
+                  
+                  
+                })
+               sentMsgs.push(msgObj)
+                
+            })
+            console.log("sent msg with url  ", sentMsgs)
 
 
             //get all messages from current chatter to current user
@@ -289,9 +305,22 @@ export default {
               .onSnapshot((querySnapshots)=>{
                 let receivedMsgs = []
                 querySnapshots.forEach(doc=>{
-                  receivedMsgs.push(doc.data())})
+                  let receivedMsgObj = doc.data()
+                  let author = doc.data().author
+                  db.collection('users')
+                    .where('displayName','==',author)
+                    .onSnapshot(users=>{
+                      users.forEach(u =>{
+                        receivedMsgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
+                      })
+                      
+                    })
+                  receivedMsgs.push(receivedMsgObj)
+                })
+                console.log("received  msg with url  ", receivedMsgs)
           
                 this.allMessages = sentMsgs.concat(receivedMsgs)
+                
 
                 //sort all messages by created data
                 this.allMessages.sort((obj1,obj2)=>{                  
@@ -299,6 +328,8 @@ export default {
                   if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
                   return 0;
                 })
+
+                console.log("ordered allll messages with urllllllllllll ",  this.allMessages)
                 
             })
 
@@ -323,34 +354,6 @@ export default {
             this.message = null
             
         },
-        fetchMessages(){
-          let allMessages = []
-          //fetch messages sent by current user
-          let sentMsgs = []
-          db.collection('chat')
-            .where("author", "==",this.authUser.displayName)
-            .onSnapshot((querySnapshots)=>{
-              querySnapshots.forEach(doc=>{
-                sentMsgs.push(doc.data())})
-            })
-
-
-          //fetch messages received by current user
-          let receivedMsgs = []
-          db.collection('chat')
-            .where("receiver", "==",this.authUser.displayName)
-            .onSnapshot((querySnapshots)=>{
-              querySnapshots.forEach(doc=>{
-                  receivedMsgs.push(doc.data())})
-
-              setTimeout(()=>{
-                  this.scrollToBottom()
-              },500)
-            })
-          allMessages = [].concat(sentMsgs,receivedMsgs);
-          this.allMessages = allMessages
-            
-        },
         fetchContacts(){
           console.log('Fetch contacts')
           // console.log(this.authUser.uid)
@@ -361,14 +364,28 @@ export default {
               if(querySnapshots){
                 let allContacts = []
                 querySnapshots.forEach(d =>{
-                    let contact = {
-                      displayName: d.data().displayName,
-                      id: d.id
-                    }
-                    allContacts.push(contact)
+                  // let id = d.id
+                  db.collection('users').doc(d.id).get()
+                    .then(user => {
+                        if (user.exists) {
+                            let contact = {
+                              displayName: user.data().displayName,
+                              id: d.id,
+                              email: user.data().email,
+                              photoURL: user.data().photoURL ? user.data().photoURL: this.defaultPhotoURL
+                            }
+                            allContacts.push(contact)
+                        } else {
+                            // doc.data() will be undefined in this case
+                            console.log("No such user!");
+                        }
+                    }).catch(function(error) {
+                        console.log("Error getting document:", error);
+                    });
                   })
                 this.allContacts = allContacts
-                  // this.searchResults = allContacts
+                console.log("fetch alllllllllll ", this.allContacts)
+                
               }else{
                   console.log('No such docs')
               }
@@ -388,16 +405,13 @@ export default {
             console.log("created")
             if(user){
                 this.authUser = user
-                // console.log(this.authUser)
                 this.fetchContacts();
-                // this.fetchMessages();
 
             }else{
                 console.log("no auth user at all")
                 this.authUser = {}
             }
         })
-        // this.fetchMessages();
         
     },
     
@@ -599,19 +613,7 @@ img{ max-width:100%;}
   margin-left: 15px;
   outline: none;
 }
-.delete_contact_btn{
-  background: tomato none repeat scroll 0 0;
-  border: medium none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 17px;
-  height: 33px;
-  /* left: 100; */
-  width: 33px;
-  margin-top: 0px;
-  float: right;
 
-}
 .add_contact_btn i{
   color: #f8f8f8
 }
