@@ -62,8 +62,6 @@ export default {
                             photoURL: "https://example.com/jane-q-user/profile.jpg"
                         }).then(() =>{
                     
-                        
-
                         //add a user to users collection
                         db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
@@ -75,10 +73,7 @@ export default {
                         }, function(error) {
                             // An error happened.
                             console.log(error)
-                        })
-                        
-
-                        
+                        })                        
                     })
                     .catch((error)=>{
                         var errorCode = error.code;

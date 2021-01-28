@@ -113,7 +113,6 @@ export default {
             authUser: {},
             reciever:{},
             activeChatId: "",
-            chatHistory:[],
             searching:false,
             searchText: "",
             searchResults:[],
@@ -175,7 +174,7 @@ export default {
                     foundUsers.push(foundUser)
                   })
                   this.foundUsers = foundUsers
-                  // this.searchResults = allContacts
+                  
                   //Only one result cound be found 
                   if(this.foundUsers.length<1){
                     this.hintMsg = "Sorry, user not exist"
@@ -208,7 +207,7 @@ export default {
               .then(function() {
                   alert("New contact added successfully")
                   console.log("Document successfully written!");
-                  // close modal afer add contact
+                  
               })
               .catch(function(error) {
                   console.error("Error writing document: ", error);
@@ -260,20 +259,14 @@ export default {
                 .onSnapshot((users)=>{
                   if(users){
                     users.forEach(u =>{
-                      // console.log('uuuuuuuuuuuuu', u.data())
                       msgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
                     })
                   }else{
                     console.log("No users")
                   }
-                  
-                  
                 })
                sentMsgs.push(msgObj)
-                
             })
-            console.log("sent msg with url  ", sentMsgs)
-
 
             //get all messages from current chatter to current user
             db.collection('chat')
@@ -294,10 +287,8 @@ export default {
                     })
                   receivedMsgs.push(receivedMsgObj)
                 })
-                console.log("received  msg with url  ", receivedMsgs)
           
                 this.allMessages = sentMsgs.concat(receivedMsgs)
-                
 
                 //sort all messages by created data
                 this.allMessages.sort((obj1,obj2)=>{                  
@@ -305,8 +296,6 @@ export default {
                   if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
                   return 0;
                 })
-
-                console.log("ordered allll messages with urllllllllllll ",  this.allMessages)
                 
             })
 
@@ -318,7 +307,6 @@ export default {
       },
 
       sendMessage(){
-            // console.log('In saveMessage')
             //save message to firebase
             db.collection('chat').add({
                 message: this.message,
@@ -332,16 +320,12 @@ export default {
             
         },
         fetchContacts(){
-          console.log('Fetch contacts')
-          // console.log(this.authUser.uid)
           if(this.authUser.uid){
-            // console.log('uid exxxxxxxxxxxxist  ' + this.authUser.uid)
             db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
               
               if(querySnapshots){
                 let allContacts = []
                 querySnapshots.forEach(d =>{
-                  // let id = d.id
                   db.collection('users').doc(d.id).get()
                     .then(user => {
                         if (user.exists) {
@@ -353,7 +337,6 @@ export default {
                             }
                             allContacts.push(contact)
                         } else {
-                            // doc.data() will be undefined in this case
                             console.log("No such user!");
                         }
                     }).catch(function(error) {
@@ -361,7 +344,6 @@ export default {
                     });
                   })
                 this.allContacts = allContacts
-                console.log("fetch alllllllllll ", this.allContacts)
                 
               }else{
                   console.log('No such docs')
@@ -370,7 +352,6 @@ export default {
           }else{
             console.log("uid not exist")
           }
-          // db.collection('contacts')
         },
         scrollToBottom(){
             let box = document.querySelector('.msg_history');
@@ -383,7 +364,6 @@ export default {
             if(user){
                 this.authUser = user
                 this.fetchContacts();
-
             }else{
                 console.log("no auth user at all")
                 this.authUser = {}

@@ -30,8 +30,7 @@ export default {
                     })
         }
     },
-    created(){
-        
+    created(){        
         firebase.auth().onAuthStateChanged((user)=>{
             if(user){
                 this.loggedIn = true

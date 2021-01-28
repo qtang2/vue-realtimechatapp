@@ -58,38 +58,26 @@ export default {
                         /** @type {firebase.auth.OAuthCredential} */
                         var credential = result.credential;
 
-                        // This gives you a Google Access Token. You can use it to access the Google API.
                         var token = credential.accessToken;
                         // The signed-in user info.
                         var user = result.user;
+
                         //add a user to users collection, Need to check if user already exist in users collection(no need, firebase wont add repeatly)
                         db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
                             email: user.email,
                             photoURL: user.photoURL
                         })
-                        // console.log('googllllllleeee user added to the user collection')
-
                         this.$router.push('/')
-                        // ...
                     }).catch((error) => {
-                        // Handle Errors here.
-                        var errorCode = error.code;
                         var errorMessage = error.message;
-                        // The email of the user's account used.
-                        var email = error.email;
-                        // The firebase.auth.AuthCredential type that was used.
-                        var credential = error.credential;
-                        // ...
+                        console.log(errorMessage)
                     });
         },
         
         loginWithEmail(){
-            console.log('login with email' + this.email + ", " + this.password )
-            // console.log("&&&&&&&&&&&&&&&&&&&")
             firebase.auth().signInWithEmailAndPassword(this.email, this.password)
                     .then((user) => {
-                        // console.log(this.email + ", " + this.password)
                         this.$router.replace('/')
                     })
                     .catch((error) => {
@@ -97,6 +85,7 @@ export default {
                         this.error = error.message
                         var errorCode = error.code;
                         var errorMessage = error.message;
+                        console.log(errorMessage)
                     });
         }
     }
@@ -106,13 +95,8 @@ export default {
 <style scoped>
 
 .container{
-    /* background-color: pink; */
-    /* display: flex;
-    align-items: center;
-    justify-content: center; */
     margin-left: 35%;
     padding: 4px;
-    /* width: 100%; */
 }
 .white{
     color:#000;
