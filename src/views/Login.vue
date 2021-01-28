@@ -63,7 +63,7 @@ export default {
                         var user = result.user;
 
                         //add a user to users collection, Need to check if user already exist in users collection(no need, firebase wont add repeatly)
-                        db.collection('users').doc(user.uid).set({
+                        this.$store.state.db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
                             email: user.email,
                             photoURL: user.photoURL

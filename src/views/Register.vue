@@ -63,7 +63,7 @@ export default {
                         }).then(() =>{
                     
                         //add a user to users collection
-                        db.collection('users').doc(user.uid).set({
+                        this.$store.state.db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
                             email: user.email,
                             photoURL: user.photoURL

@@ -109,7 +109,7 @@ export default {
         return {
             message: null,
             allMessages: [],
-            allContacts:[],
+            // allContacts:[],
             authUser: {},
             reciever:{},
             activeChatId: "",
@@ -127,6 +127,10 @@ export default {
             toDeleteContact:{},
             defaultPhotoURL: "https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png"
         }
+    },
+    computed:{
+      authUser(){ return this.$store.state.authUser},
+      allContacts(){ return this.$store.state.allContacts}
     },
     methods:{
      
@@ -319,51 +323,59 @@ export default {
             this.message = null
             
         },
-        fetchContacts(){
-          if(this.authUser.uid){
-            db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
+        // fetchContacts(){
+        //   if(this.authUser.uid){
+        //     db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
               
-              if(querySnapshots){
-                let allContacts = []
-                querySnapshots.forEach(d =>{
-                  db.collection('users').doc(d.id).get()
-                    .then(user => {
-                        if (user.exists) {
-                            let contact = {
-                              displayName: user.data().displayName,
-                              id: d.id,
-                              email: user.data().email,
-                              photoURL: user.data().photoURL ? user.data().photoURL: this.defaultPhotoURL
-                            }
-                            allContacts.push(contact)
-                        } else {
-                            console.log("No such user!");
-                        }
-                    }).catch(function(error) {
-                        console.log("Error getting document:", error);
-                    });
-                  })
-                this.allContacts = allContacts
+        //       if(querySnapshots){
+        //         let allContacts = []
+        //         querySnapshots.forEach(d =>{
+        //           db.collection('users').doc(d.id).get()
+        //             .then(user => {
+        //                 if (user.exists) {
+        //                     let contact = {
+        //                       displayName: user.data().displayName,
+        //                       id: d.id,
+        //                       email: user.data().email,
+        //                       photoURL: user.data().photoURL ? user.data().photoURL: this.defaultPhotoURL
+        //                     }
+        //                     allContacts.push(contact)
+        //                 } else {
+        //                     console.log("No such user!");
+        //                 }
+        //             }).catch(function(error) {
+        //                 console.log("Error getting document:", error);
+        //             });
+        //           })
+        //         this.allContacts = allContacts
                 
-              }else{
-                  console.log('No such docs')
-              }
-            })
-          }else{
-            console.log("uid not exist")
-          }
-        },
+        //       }else{
+        //           console.log('No such docs')
+        //       }
+        //     })
+        //   }else{
+        //     console.log("uid not exist")
+        //   }
+        // },
         scrollToBottom(){
             let box = document.querySelector('.msg_history');
             box.scrollTop = box.scrollHeight
-        }
+        },
+        
     },
     created(){
         firebase.auth().onAuthStateChanged((user)=>{
             console.log("created")
-            if(user){
-                this.authUser = user
-                this.fetchContacts();
+             if(user){
+                let authUser = {
+                  uid: user.uid,
+                  displayName: user.displayName,
+                  email: user.email,
+                  photoURL: user.photoURL
+                }
+                this.$store.dispatch('setAuthUser',authUser)
+                this.$store.dispatch('fetchContacts')
+                // this.fetchContacts();
             }else{
                 console.log("no auth user at all")
                 this.authUser = {}

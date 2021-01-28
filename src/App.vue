@@ -13,8 +13,8 @@ export default {
       if(!user){
         console.log("No user at all, then go to login page")
         this.$router.replace('/login')
-      }else if(this.route.path == '/login' || this.route.path == '/register'){
-        console.log("already logged in then go to home page")
+      }else if(this.$route.path == '/login' || this.$route.path == '/register'){
+        console.log("already logged in then go to home page", user)
         this.$router.replace('/')
       }
     })
