@@ -8,7 +8,6 @@
 import firebase from 'firebase'
 
 export default {
-  // components:{'sign-out': SignOut}
   beforeMount(){
     firebase.auth().onAuthStateChanged((user)=>{
       if(!user){

@@ -97,6 +97,7 @@ export default {
 .container{
     margin-left: 35%;
     padding: 4px;
+    /* background-color: pink; */
 }
 .white{
     color:#000;
