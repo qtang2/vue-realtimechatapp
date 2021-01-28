@@ -2,9 +2,7 @@
   <div class="signout-head"> 
       <span class="welcome" v-if="loggedIn">Welcome, {{authUserName}} </span>
       <span v-else class="welcome">Please Log in </span>
-      <button type="button" class="btn btn-link" @click="signOut">Sign Out</button>
-    
-      
+      <button type="button" class="btn btn-link" @click="signOut">Sign Out</button>      
   </div>
 </template>
 
@@ -35,9 +33,7 @@ export default {
     created(){
         
         firebase.auth().onAuthStateChanged((user)=>{
-            // this.loggedIn = !!user
             if(user){
-                // console.log('Sign out MMMMMMMMM set to trueeeeeeee')
                 this.loggedIn = true
                 this.authUserName = user.displayName
             }else{

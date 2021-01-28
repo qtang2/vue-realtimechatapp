@@ -1,16 +1,11 @@
 <template>
     <div class="container">
       <sign-out></sign-out>
-      <div v-if="showDeleteModal" class="delete_contact_container">
-          <transition name="fade" appear>
-            <div>
-              <p>Delete ' {{toDeleteContact.displayName}} ' ? </p>
-              <button class="btn btn-danger btn-sm" type="button" @click="deleteContact">Delete</button>
-              <button class="btn btn-default btn-sm" type="button" @click="closeDeleteModal">Cancel</button>
-            </div>
-          </transition>
+      <div v-if="showDeleteModal" class="delete_contact_container" >          
+          <delete-contact-modal :toDeleteContact="toDeleteContact" @closeDeleteModal="closeDeleteModal" @deleteContact = "deleteContact" />
         </div>
       <div class="messaging" :class="{hide_page: showDeleteModal}" >
+        
         <div class="inbox_msg">
             <div class="inbox_people">
               <div class="heading_srch">
@@ -42,34 +37,7 @@
             </div>
             <div v-else class="inbox_chat">
                 <div class="add_contact_container" v-if="showAddModal">
-                  <transition name="fade" appear>
-                    <div class="modal-overlay" >
-                      <div class="heading_srch">
-                        <div class="srch_bar">
-                          <div class="stylish-input-group">
-                            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" @keyup.enter="findUser">
-                            <span class="input-group-addon">
-                            <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-                            </span>
-                          </div>
-                          <button @click="closeModal" class="close_add_btn" type="button"><i class="fa fa-window-close" aria-hidden="true"></i></button>
-                          
-                        </div>
-                      </div>
-                      <div class="search_result_container">
-                        <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
-                          <div class="chat_people">
-                              <div class="chat_img"> <img :src="userToAdd.photoURL? userToAdd.photoURL: defaultPhotoURL"> </div>
-                              <div class="chat_ib">
-                                <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
-                              </div>
-                          </div>
-                        </div>
-                        <p v-if="hintMsg.length > 0">{{hintMsg}}</p>
-                      </div>
-                        
-                    </div>
-                  </transition>
+                  <add-contact-modal :foundUsers="foundUsers" :hintMsg="hintMsg" @findUser="findUser($event)" @closeModal="closeModal" @addContact="addContact($event)" />
                 </div>
 
                 <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatId}" >
@@ -128,9 +96,15 @@
 <script>
 import firebase from 'firebase'
 import SignOut from '../components/SignOut'
+import DeleteContactModal from '../components/DeleteContactModal'
+import AddContactModal from '../components/AddContactModal'
 
 export default {
-  components:{'sign-out':SignOut},
+  components:{
+    'sign-out':SignOut,
+    'delete-contact-modal':DeleteContactModal,
+    'add-contact-modal': AddContactModal
+  },
     data(){
         return {
             message: null,
@@ -156,6 +130,7 @@ export default {
         }
     },
     methods:{
+     
       startTiming(){
         this.mousedownTime = new Date().getTime();
       },
@@ -181,11 +156,11 @@ export default {
         this.closeDeleteModal()
         
       },
-      findUser(){
+      findUser(userToFind){
         this.hintMsg = ""
-        console.log("we want to find userrrrr  " + this.userToFind)
+        console.log("we want to find userrrrr  " + userToFind)
         db.collection('users')
-          .where("displayName","==",this.userToFind)
+          .where("displayName","==",userToFind)
           .get()
           .then((users)=>{ 
             if(users){
@@ -213,6 +188,7 @@ export default {
                 }
           })
       },
+      
       addContact(userToAdd){
         console.log('add this id '+  this.authUser.uid + "a new contact , which is " + userToAdd.id)
         //search in the db and then decide to add new contacts collection in db
@@ -250,6 +226,7 @@ export default {
         this.hintMsg = ""
       },
       closeDeleteModal(){
+        console.log('parent close del modal' )
         this.showDeleteModal = false
         this.toDeleteContact = {}
         
@@ -264,7 +241,7 @@ export default {
       },
       displayChatHistory(receiverObj){
 
-        this.allMessages = []
+        this.message = null
         //set current active chat 
         this.receiver = receiverObj
         this.activeChatId = this.receiver.id
@@ -287,7 +264,7 @@ export default {
                       msgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
                     })
                   }else{
-                    console.log("NOOOOOOOOOO users")
+                    console.log("No users")
                   }
                   
                   
@@ -418,7 +395,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .hide_page{
   opacity: 60%;
   pointer-events:none;
@@ -432,9 +409,6 @@ export default {
   right: 61%;
   z-index: 101;
   padding: 10px;
-}
-.delete_contact_container button{
-  margin-right: 10px;
 }
 .fade-enter-active,
 .fade-leave-active{
