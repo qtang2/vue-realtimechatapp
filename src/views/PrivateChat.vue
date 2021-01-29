@@ -2,7 +2,7 @@
     <div class="container">
       <sign-out></sign-out>
       <div v-if="showDeleteModal" class="delete_contact_container" >          
-          <delete-contact-modal :toDeleteContact="toDeleteContact" @closeDeleteModal="closeDeleteModal" @deleteContact = "deleteContact" />
+          <delete-contact-modal  @closeDeleteModal="closeDeleteModal" />
         </div>
       <div class="messaging" :class="{hide_page: showDeleteModal}" >
         
@@ -25,7 +25,7 @@
                   </div>
               </div>
             <div v-if="searching" class="inbox_chat">
-              <div v-for="contact in searchResults" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatId}" @click="displayChatHistory(contact)">
+              <div v-for="contact in searchResults" :key="contact.id" class="chat_list" :class="{active_chat: contact.id === activeChatter.id}" @click="displayChatHistory(contact)">
                 <div class="chat_people">
                     <div class="chat_img"> <img :src="contact.photoURL" alt="profile image"> </div>
                     <div class="chat_ib">
@@ -37,10 +37,10 @@
             </div>
             <div v-else class="inbox_chat">
                 <div class="add_contact_container" v-if="showAddModal">
-                  <add-contact-modal :foundUsers="foundUsers" :hintMsg="hintMsg" @findUser="findUser($event)" @closeModal="closeModal" @addContact="addContact($event)" />
+                  <add-contact-modal  @closeModal="closeModal" />
                 </div>
 
-                <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatId}" >
+                <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatter.id}" >
                   <div class="chat_people" >
                       <div class="chat_img"> <img :src="contact.photoURL" alt="profile image"> </div>
                       <div class="chat_ib">
@@ -57,7 +57,7 @@
 
             <div class="mesgs">
             <div class="msg_history">
-              <div v-for="messageObj in allMessages" :key="messageObj.id">
+              <div v-for="messageObj in chatHistory" :key="messageObj.id">
                 <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
                     <img :src="messageObj.authorPhotoURL? messageObj.authorPhotoURL: defaultPhotoURL" alt="profile img"> 
@@ -108,29 +108,31 @@ export default {
     data(){
         return {
             message: null,
-            allMessages: [],
+            // allMessages: [],
             // allContacts:[],
-            authUser: {},
-            reciever:{},
-            activeChatId: "",
+            // authUser: {},
+            // reciever:{},
+            // activeChatId: "",
             searching:false,
             searchText: "",
             searchResults:[],
             showAddModal: false,
             showDeleteModal:false,
-            foundUsers:[],
-            userToFind:"",
-            hintMsg: "",
+            // foundUsers:[],
+            // userToFind:"",
+            // hintMsg: "",
             pressTime: 0,
             mousedownTime:null,
             mouseupTime:null,
-            toDeleteContact:{},
+            // toDeleteContact:{},
             defaultPhotoURL: "https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png"
         }
     },
     computed:{
       authUser(){ return this.$store.state.authUser},
-      allContacts(){ return this.$store.state.allContacts}
+      allContacts(){ return this.$store.state.allContacts},
+      chatHistory(){return this.$store.state.chatHistory},
+      activeChatter(){return this.$store.state.activeChatter}
     },
     methods:{
      
@@ -140,98 +142,22 @@ export default {
       endTiming(contact){
         this.mouseupTime = new Date().getTime();
         if((this.mouseupTime - this.mousedownTime) > 500){
-          console.log("longpresssssss to delete")
           this.showDeleteModal = true
-          this.toDeleteContact = contact
+          this.$store.dispatch('setToDeleteContact',contact)
         }else{
           this.displayChatHistory(contact)
         }
       },
-      deleteContact(){
-        console.log('wanna delete contact ' + this.toDeleteContact.id + " for current user "+ this.authUser.uid)
-
-        db.collection("contacts").doc(this.authUser.uid).collection('mycontacts').doc(this.toDeleteContact.id).delete().then(function() {
-          alert("Contact successfully deleted!")
-          console.log("Document successfully deleted!");
-        }).catch(function(error) {
-            console.error("Error removing document: ", error);
-        });
-        this.closeDeleteModal()
-        
-      },
-      findUser(userToFind){
-        this.hintMsg = ""
-        console.log("we want to find userrrrr  " + userToFind)
-        db.collection('users')
-          .where("displayName","==",userToFind)
-          .get()
-          .then((users)=>{ 
-            if(users){
-                  let foundUsers = []
-                  users.forEach(d =>{
-                    let foundUser = {
-                      id: d.id,
-                      displayName: d.data().displayName,
-                      email: d.data().email,
-                      photoURL: d.data().photoURL
-                    }
-                    foundUsers.push(foundUser)
-                  })
-                  this.foundUsers = foundUsers
-                  
-                  //Only one result cound be found 
-                  if(this.foundUsers.length<1){
-                    this.hintMsg = "Sorry, user not exist"
-                    console.log('Sorry, user not exist')
-                  }
-                  console.log('Found users ', this.foundUsers)
-                  
-                }else{
-                  console.log('Not found any user')
-                }
-          })
-      },
       
-      addContact(userToAdd){
-        console.log('add this id '+  this.authUser.uid + "a new contact , which is " + userToAdd.id)
-        //search in the db and then decide to add new contacts collection in db
-        let curUserRef = db.collection("contacts").doc(this.authUser.uid)
-        let newContactRef = curUserRef.collection('mycontacts').doc(userToAdd.id)
-
-        newContactRef.get()
-          .then((docSnapshot)=>{
-            if(docSnapshot.exists){
-              console.log("exist")
-              alert("Contact already added")
-            }else{
-              console.log("not exist")
-              newContactRef.set({
-                displayName: userToAdd.displayName
-              })
-              .then(function() {
-                  alert("New contact added successfully")
-                  console.log("Document successfully written!");
-                  
-              })
-              .catch(function(error) {
-                  console.error("Error writing document: ", error);
-              });
-              this.closeModal()
-            }
-          })      
-
-        
-      },
       closeModal(){
         this.showAddModal = false
-        this.userToFind = ""
-        this.foundUsers = []
-        this.hintMsg = ""
+        this.$store.dispatch('resetFoundUsers')
+        this.$store.dispatch('resetFindUserHintMsg')
       },
       closeDeleteModal(){
         console.log('parent close del modal' )
         this.showDeleteModal = false
-        this.toDeleteContact = {}
+        this.$store.dispatch('resetToDeleteContact')
         
       },
       searchContact(){
@@ -242,69 +168,9 @@ export default {
         })
 
       },
-      displayChatHistory(receiverObj){
+      displayChatHistory(activeChatter){
+        this.$store.dispatch('displayChatHistory',activeChatter)
 
-        this.message = null
-        //set current active chat 
-        this.receiver = receiverObj
-        this.activeChatId = this.receiver.id
-        console.log(" now active id is " + this.activeChatId)
-        //get all messages from current user to chatter
-        db.collection('chat')
-          .where("author", "==",this.authUser.displayName)
-          .where("receiver", "==",receiverObj.displayName)
-          .onSnapshot((querySnapshots)=>{
-            let sentMsgs = []
-            querySnapshots.forEach(doc=>{
-              let msgObj = doc.data()
-              let author = doc.data().author
-              db.collection('users')
-                .where('displayName','==',author)
-                .onSnapshot((users)=>{
-                  if(users){
-                    users.forEach(u =>{
-                      msgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
-                    })
-                  }else{
-                    console.log("No users")
-                  }
-                })
-               sentMsgs.push(msgObj)
-            })
-
-            //get all messages from current chatter to current user
-            db.collection('chat')
-              .where("author", "==",receiverObj.displayName)
-              .where("receiver", "==",this.authUser.displayName)
-              .onSnapshot((querySnapshots)=>{
-                let receivedMsgs = []
-                querySnapshots.forEach(doc=>{
-                  let receivedMsgObj = doc.data()
-                  let author = doc.data().author
-                  db.collection('users')
-                    .where('displayName','==',author)
-                    .onSnapshot(users=>{
-                      users.forEach(u =>{
-                        receivedMsgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: this.defaultPhotoURL
-                      })
-                      
-                    })
-                  receivedMsgs.push(receivedMsgObj)
-                })
-          
-                this.allMessages = sentMsgs.concat(receivedMsgs)
-
-                //sort all messages by created data
-                this.allMessages.sort((obj1,obj2)=>{                  
-                  if(Date.parse(obj1.createdAt) > Date.parse(obj2.createdAt)) return 1;
-                  if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
-                  return 0;
-                })
-                
-            })
-
-            
-          })
       },
       setActive(){
         this.activeChat = !this.activeChat
@@ -323,40 +189,6 @@ export default {
             this.message = null
             
         },
-        // fetchContacts(){
-        //   if(this.authUser.uid){
-        //     db.collection('contacts').doc(this.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
-              
-        //       if(querySnapshots){
-        //         let allContacts = []
-        //         querySnapshots.forEach(d =>{
-        //           db.collection('users').doc(d.id).get()
-        //             .then(user => {
-        //                 if (user.exists) {
-        //                     let contact = {
-        //                       displayName: user.data().displayName,
-        //                       id: d.id,
-        //                       email: user.data().email,
-        //                       photoURL: user.data().photoURL ? user.data().photoURL: this.defaultPhotoURL
-        //                     }
-        //                     allContacts.push(contact)
-        //                 } else {
-        //                     console.log("No such user!");
-        //                 }
-        //             }).catch(function(error) {
-        //                 console.log("Error getting document:", error);
-        //             });
-        //           })
-        //         this.allContacts = allContacts
-                
-        //       }else{
-        //           console.log('No such docs')
-        //       }
-        //     })
-        //   }else{
-        //     console.log("uid not exist")
-        //   }
-        // },
         scrollToBottom(){
             let box = document.querySelector('.msg_history');
             box.scrollTop = box.scrollHeight
@@ -375,7 +207,6 @@ export default {
                 }
                 this.$store.dispatch('setAuthUser',authUser)
                 this.$store.dispatch('fetchContacts')
-                // this.fetchContacts();
             }else{
                 console.log("no auth user at all")
                 this.authUser = {}

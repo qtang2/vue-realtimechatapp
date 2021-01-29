@@ -13,7 +13,10 @@
 
 <script>
 export default {
-    props:['toDeleteContact'],
+    
+    computed:{
+        toDeleteContact(){return this.$store.state.toDeleteContact}
+    },
     methods:{
         closeDeleteModal(){
             console.log("close moooooo")
@@ -21,7 +24,10 @@ export default {
         },
         deleteContact(){
             console.log("delecoonnn")
-            this.$emit('deleteContact')
+            this.$store.dispatch('deleteContact',this.toDeleteContact)
+            // this.$emit('deleteContact')
+            this.closeDeleteModal()
+            
         }
     }
 

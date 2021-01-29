@@ -4,9 +4,9 @@
       <div class="heading_srch">
         <div class="srch_bar">
           <div class="stylish-input-group">
-            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" @keyup.enter="findUser">
+            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" @keyup.enter="findUsers">
             <span class="input-group-addon">
-            <button @click="findUser" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
+            <button @click="findUsers" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
             </span>
           </div>
           <button @click="closeModal" class="close_add_btn" type="button"><i class="fa fa-window-close" aria-hidden="true"></i></button>
@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="search_result_container">
-        <div v-for="userToAdd in foundUsers" :key="userToAdd.displayName" class="chat_list" >
+        <div v-for="userToAdd in foundUsers" :key="userToAdd.id" class="chat_list" >
           <div class="chat_people">
               <div class="chat_img"> <img :src="userToAdd.photoURL? userToAdd.photoURL: defaultPhotoURL"> </div>
               <div class="chat_ib">
@@ -22,7 +22,7 @@
               </div>
           </div>
         </div>
-        <p v-if="hintMsg.length > 0">{{hintMsg}}</p>
+        <p v-if="findUserHintMsg.length > 0">{{findUserHintMsg}}</p>
       </div>
         
     </div>
@@ -31,21 +31,26 @@
 
 <script>
 export default {
-  props:['foundUsers','hintMsg'],
+  
+  computed:{
+    foundUsers(){ return this.$store.state.foundUsers},
+    findUserHintMsg(){ return this.$store.state.findUserHintMsg}
+  },
   data(){
     return {
       userToFind:""
     }
   },
   methods:{
-    findUser(){
-      this.$emit('findUser',this.userToFind)
+    findUsers(){
+      this.$store.dispatch('findUsers',this.userToFind)
     },
     closeModal(){
       this.$emit('closeModal')
     },
     addContact(userToAdd){
-      this.$emit('addContact',userToAdd)
+      this.$store.dispatch('addContact', userToAdd)
+      this.closeModal()
     }
   }
 }
