@@ -25,7 +25,6 @@ export default {
         deleteContact(){
             console.log("delecoonnn")
             this.$store.dispatch('deleteContact',this.toDeleteContact)
-            // this.$emit('deleteContact')
             this.closeDeleteModal()
             
         }

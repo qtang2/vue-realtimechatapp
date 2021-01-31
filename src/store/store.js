@@ -26,7 +26,7 @@ db.settings({
 export const store = new Vuex.Store({
   state: {
     db: db,
-    authUser:null,
+    authUser:{},
     defaultPhotoURL:"https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png",
     allContacts:[],
     chatHistory:[],
@@ -37,43 +37,68 @@ export const store = new Vuex.Store({
   },
   mutations: {
     //mutations must have state as the first arg
+
     findUsers:(state,foundUsers) =>{
+      state.findUserHintMsg = ""
       state.foundUsers = foundUsers
       //Only one result cound be found 
       if(state.foundUsers.length<1){
         state.findUserHintMsg = "Sorry, user not exist"
         console.log('Sorry, user not exist')
       }
-      console.log("mutation found user ", state.foundUsers)
+      
     },
     setActiveChatter:(state,activeChatter) =>{
+      console.log('set activeeeeeeeeeee')
       state.activeChatter = activeChatter
-      console.log("mutation active chatter  set ", state.activeChatter)
     },
-    displayChatHistory: (state,chatHistory) =>{
-      console.log("mutation displayChatHitory", chatHistory)
-      state.chatHistory = chatHistory
+    displayChatHistory: (state,chatHistory) =>{state.chatHistory = chatHistory
     },
-    fetchContacts: (state,allContacts)=>{
-      console.log("in Mutation fetch ", allContacts)
-      state.allContacts = allContacts
+    fetchContacts: (state,allContacts)=>{state.allContacts = allContacts
     }, 
-    setAuthUser:function (state,user){
-      console.log("in Mutation set Auth User ", user)
-      state.authUser = user
+    setAuthUser:(state,user)=>{state.authUser = user
     },
-    setToDeleteContact: (state,toDeleteContact) =>{
-      state.toDeleteContact = toDeleteContact
+    setToDeleteContact: (state,toDeleteContact) =>{state.toDeleteContact = toDeleteContact
     },
-    resetFoundUsers:function(state){state.foundUsers = []},
-    resetFindUserHintMsg:function(state){state.findUserHintMsg = "" },
-    resetToDeleteContact:function(state){state.toDeleteContact = {} }
-    
+    resetFoundUsers:(state)=>{state.foundUsers = []},
+    resetFindUserHintMsg:(state)=>{state.findUserHintMsg = "" },
+    resetToDeleteContact:(state)=>{state.toDeleteContact = {} },
+    signOut:(state)=>{state.authUser={}}
   },
 
 
-  
   actions: {
+    signOut:({commit})=>{
+      firebase.auth().signOut()
+              .then(()=>{
+                commit('signOut')
+                this.$router.replace({name:'Login'})
+                alert('Sign out successfully :)')
+                console.log('sign out successfully')
+                
+              })
+              .catch((err)=>{
+                  console.log(err)
+              })
+    },
+    //save message to firebase
+    sendMessage:({state},message)=>{
+      //Check if chose a chatter to send message
+      if(Object.keys(state.activeChatter).length !== 0){
+        console.log('have active chatttter ',state.activeChatter)
+        state.db.collection('chat').add({
+          message: message,
+          createdAt: new Date().toUTCString(),
+          author: state.authUser.displayName,
+          receiver: state.activeChatter.displayName
+        }).then(()=>{
+            console.log("message sent :)")
+        })
+      }else{
+        alert('Choose one chatter to start chatting :)')
+      }
+      
+    },
     deleteContact:({commit,state},toDeleteContact)=>{
       commit('setToDeleteContact',toDeleteContact)
       console.log('wanna delete contact ' + state.toDeleteContact.id + " for current user "+ state.authUser.uid)
@@ -85,7 +110,6 @@ export const store = new Vuex.Store({
           console.error("Error removing document: ", error);
       });
     },
-
     addContact:({state},userToAdd)=>{
       console.log('add this id '+  state.authUser.uid + "a new contact , which is " + userToAdd.id)
         //search in the db and then decide to add new contacts collection in db
@@ -138,10 +162,10 @@ export const store = new Vuex.Store({
               }
         })
     },
+    //TODO: Need to fix mutual contact problem and how to set active chatter at first
     displayChatHistory:({commit, state},activeChatter) =>{
         //set current active chat 
         commit('setActiveChatter',activeChatter)
-        // this.activeChatId = this.receiver.id
 
         //get all messages from current user to chatter
         state.db.collection('chat')
@@ -151,19 +175,7 @@ export const store = new Vuex.Store({
             let sentMsgs = []
             querySnapshots.forEach(doc=>{
               let msgObj = doc.data()
-              let author = doc.data().author
-              state.db.collection('users')
-                .where('displayName','==',author)
-                .onSnapshot((users)=>{
-                  if(users){
-                    users.forEach(u =>{
-                      msgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: state.defaultPhotoURL
-                    })
-                  }else{
-                    console.log("No users")
-                  }
-                })
-               sentMsgs.push(msgObj)
+              sentMsgs.push(msgObj)
             })
 
             //get all messages sent from current chatter to current user
@@ -174,15 +186,6 @@ export const store = new Vuex.Store({
                 let receivedMsgs = []
                 querySnapshots.forEach(doc=>{
                   let receivedMsgObj = doc.data()
-                  let author = doc.data().author
-                  state.db.collection('users')
-                    .where('displayName','==',author)
-                    .onSnapshot(users=>{
-                      users.forEach(u =>{
-                        receivedMsgObj['authorPhotoURL'] = u.data().photoURL ? u.data().photoURL: state.defaultPhotoURL
-                      })
-                      
-                    })
                   receivedMsgs.push(receivedMsgObj)
                 })
                 
@@ -195,9 +198,8 @@ export const store = new Vuex.Store({
                   return 0;
                 })
 
-                // state.chatHistory = sentMsgs.concat(receivedMsgs)
-                commit('displayChatHistory',chatHistory)
-                
+                // console.log('chat history ', chatHistory)
+                commit('displayChatHistory',chatHistory)                
             })
 
             

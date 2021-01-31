@@ -1,45 +1,21 @@
 <template>
   <div class="signout-head"> 
-      <span class="welcome" v-if="loggedIn">Welcome, {{authUserName}} </span>
+      <span class="welcome" v-if="authUser.displayName !==''">Welcome, {{authUser.displayName}} </span>
       <span v-else class="welcome">Please Log in </span>
       <button type="button" class="btn btn-link" @click="signOut">Sign Out</button>      
   </div>
 </template>
 
 <script>
-import firebase from 'firebase/app'
-import 'firebase/auth'
-
 export default {
-    data(){
-        return{
-            loggedIn:false,
-            authUserName: ""
-        }
-        
+    computed:{
+        authUser(){ return this.$store.state.authUser}
     },
     methods:{
         signOut(){
-            firebase.auth().signOut()
-                    .then(()=>{
-                        console.log('sign out successfully')
-                        this.$router.replace({name:'Login'})
-                    })
-                    .catch((err)=>{
-                        console.log(err)
-                    })
+            this.$store.dispatch('signOut')
         }
     },
-    created(){        
-        firebase.auth().onAuthStateChanged((user)=>{
-            if(user){
-                this.loggedIn = true
-                this.authUserName = user.displayName
-            }else{
-                this.loggedIn = false
-            }
-        })
-    }
 
 }
 </script>

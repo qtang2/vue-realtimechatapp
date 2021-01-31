@@ -3,9 +3,8 @@
       <sign-out></sign-out>
       <div v-if="showDeleteModal" class="delete_contact_container" >          
           <delete-contact-modal  @closeDeleteModal="closeDeleteModal" />
-        </div>
-      <div class="messaging" :class="{hide_page: showDeleteModal}" >
-        
+      </div>
+      <div class="messaging" :class="{hide_page: showDeleteModal}" >        
         <div class="inbox_msg">
             <div class="inbox_people">
               <div class="heading_srch">
@@ -36,10 +35,12 @@
               </div>
             </div>
             <div v-else class="inbox_chat">
-                <div class="add_contact_container" v-if="showAddModal">
+                <div  v-if="showAddModal" class="add_contact_container">
                   <add-contact-modal  @closeModal="closeModal" />
                 </div>
-
+                <div v-else-if="allContacts.length===0">
+                  <p>No contacts :O</p>
+                </div>
                 <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatter.id}" >
                   <div class="chat_people" >
                       <div class="chat_img"> <img :src="contact.photoURL" alt="profile image"> </div>
@@ -47,12 +48,9 @@
                         <h5>{{contact.displayName}}</h5>
                         <p>Click to start chatting</p>
                       </div> 
-                  </div>
-                  
-                </div>
-                
-            </div>
-            
+                  </div>                  
+                </div>                
+            </div>            
             </div>
 
             <div class="mesgs">
@@ -60,22 +58,28 @@
               <div v-for="messageObj in chatHistory" :key="messageObj.id">
                 <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
-                    <img :src="messageObj.authorPhotoURL? messageObj.authorPhotoURL: defaultPhotoURL" alt="profile img"> 
+                    <img :src="activeChatter.photoURL?activeChatter.photoURL: defaultPhotoURL" alt="profile img"> 
                   </div>
                   <div class="received_msg">
                     <div class="received_withd_msg">
                       <p>{{messageObj.message}}</p>
                       <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
-                      <!-- <span class="time_date"> {{messageObj.authorPhotoURL}} | {{messageObj.author}}</span> -->
                     </div>
-                      <br>
                   </div>
               </div>
               <div v-else-if="messageObj.author === authUser.displayName" class="outgoing_msg">
-                <div class="sent_msg">
-                  <p>{{messageObj.message}}</p>
-                    <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
-                </div>
+                
+                  <div class="sent_msg">
+                    <div class="sent_info">
+                      <div class="sent_withd_msg">
+                        <p>{{messageObj.message}}</p>
+                        <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
+                      </div>
+                      <div class="outgoing_msg_img"> 
+                        <img :src="authUser.photoURL" alt="profile img"> 
+                      </div>
+                    </div>
+                  </div>
               </div>
               </div>
                 
@@ -107,35 +111,24 @@ export default {
   },
     data(){
         return {
-            message: null,
-            // allMessages: [],
-            // allContacts:[],
-            // authUser: {},
-            // reciever:{},
-            // activeChatId: "",
+            message: "",
             searching:false,
             searchText: "",
             searchResults:[],
             showAddModal: false,
             showDeleteModal:false,
-            // foundUsers:[],
-            // userToFind:"",
-            // hintMsg: "",
-            pressTime: 0,
             mousedownTime:null,
             mouseupTime:null,
-            // toDeleteContact:{},
-            defaultPhotoURL: "https://downtownvictoria.ca/app/uploads/2019/05/avatar-1.png"
         }
     },
     computed:{
       authUser(){ return this.$store.state.authUser},
       allContacts(){ return this.$store.state.allContacts},
       chatHistory(){return this.$store.state.chatHistory},
-      activeChatter(){return this.$store.state.activeChatter}
+      activeChatter(){return this.$store.state.activeChatter},
+      defaultPhotoURL(){ return this.$store.state.defaultPhotoURL}
     },
     methods:{
-     
       startTiming(){
         this.mousedownTime = new Date().getTime();
       },
@@ -155,13 +148,11 @@ export default {
         this.$store.dispatch('resetFindUserHintMsg')
       },
       closeDeleteModal(){
-        console.log('parent close del modal' )
         this.showDeleteModal = false
         this.$store.dispatch('resetToDeleteContact')
         
       },
       searchContact(){
-        console.log("searching someone " + this.searchText)
         this.searching = true
         this.searchResults = this.allContacts.filter((contact) =>{
           return contact.displayName.includes(this.searchText)
@@ -169,49 +160,44 @@ export default {
 
       },
       displayChatHistory(activeChatter){
+        this.message = ""        
         this.$store.dispatch('displayChatHistory',activeChatter)
-
+        this.scrollToBottom()
       },
-      setActive(){
-        this.activeChat = !this.activeChat
-      },
-
       sendMessage(){
-            //save message to firebase
-            db.collection('chat').add({
-                message: this.message,
-                createdAt: new Date().toUTCString(),
-                author: this.authUser.displayName,
-                receiver: this.receiver.displayName
-            }).then(()=>{
-                this.scrollToBottom();
-            })
-            this.message = null
-            
-        },
-        scrollToBottom(){
-            let box = document.querySelector('.msg_history');
-            box.scrollTop = box.scrollHeight
-        },
+        if(this.message){
+          this.$store.dispatch('sendMessage',this.message)
+          this.scrollToBottom();
+          this.message = "" 
+        }else{
+          return 
+        }
+        
+      },
+      //TODO: Need to fix scroll to bottom problem, now have to click  twice to scroll to bottom 
+      scrollToBottom(){
+        let box = document.querySelector('.msg_history');
+        box.scrollTop = box.scrollHeight
+        console.log('scroll to bottom '+ box.scrollHeight)
+      },
         
     },
     created(){
-        firebase.auth().onAuthStateChanged((user)=>{
-            console.log("created")
-             if(user){
-                let authUser = {
-                  uid: user.uid,
-                  displayName: user.displayName,
-                  email: user.email,
-                  photoURL: user.photoURL
-                }
-                this.$store.dispatch('setAuthUser',authUser)
-                this.$store.dispatch('fetchContacts')
-            }else{
-                console.log("no auth user at all")
-                this.authUser = {}
-            }
-        })
+      console.log('created')
+      firebase.auth().onAuthStateChanged((user)=>{
+        if(user){
+          let authUser = {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL?user.photoURL: this.$store.state.defaultPhotoURL
+          }
+          this.$store.dispatch('setAuthUser',authUser)
+          this.$store.dispatch('fetchContacts')
+      }else{
+          console.log("no auth user at all")
+      }
+      })
         
     },
     
@@ -219,6 +205,11 @@ export default {
 </script>
 
 <style>
+.msg_history {
+  padding-top: 10px;
+  height: 516px;
+  overflow-y: auto;
+}
 .hide_page{
   opacity: 60%;
   pointer-events:none;
@@ -329,8 +320,6 @@ img{ max-width:100%;}
   float: left;
   padding: 0 0 0 15px;
   width: 88%;
-  background-color: tomato;
-  /* display: inline-block; */
 }
 .chat_list {
   border-bottom: 1px solid #c4c4c4;
@@ -342,16 +331,26 @@ img{ max-width:100%;}
 
 .active_chat{ background:#ebebeb;}
 
+.incoming_msg{
+  margin-left: -5px;
+}
 .incoming_msg_img {
   display: inline-block;
   width: 6%;
+}
+.outgoing_msg_img {
+  display: inline-block;
+  width: 9%;
+  margin-left: 10px;
 }
 .received_msg {
   display: inline-block;
   padding: 0 0 0 10px;
   vertical-align: top;
   width: 92%;
+  /* background-color: teal; */
  }
+
  .received_withd_msg p {
   background: #ebebeb none repeat scroll 0 0;
   border-radius: 3px;
@@ -368,6 +367,16 @@ img{ max-width:100%;}
   margin: 8px 0 0;
 }
 .received_withd_msg { width: 57%;}
+.sent_info{
+  display: flex;
+}
+.sent_withd_msg { 
+  display: inline-block;
+  padding: 0 0 0 10px;
+  vertical-align: top;
+  width: 88%;
+  /* background-color: pink; */
+}
 .mesgs {
   float: left;
   padding: 30px 15px 0 25px;
@@ -382,10 +391,10 @@ img{ max-width:100%;}
   padding: 5px 10px 5px 12px;
   width:100%;
 }
-.outgoing_msg{ overflow:hidden; margin:26px 0 26px;}
+.outgoing_msg{ overflow:hidden; margin:10px 0 10px;}
 .sent_msg {
   float: right;
-  width: 46%;
+  width: 66%;
 }
 .input_msg_write input {
   background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
@@ -429,8 +438,8 @@ img{ max-width:100%;}
   width: 33px;
 }
 .messaging { padding: 0 0 50px 0;}
-.msg_history {
-  height: 516px;
-  overflow-y: auto;
+.error{
+    color:tomato
 }
+
 </style>

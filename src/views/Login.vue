@@ -1,7 +1,7 @@
 <template>
 <div class="outer-conatiner">
     <div class="container">
-        <div v-if="error">{{error}}</div>
+        
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
                 <div class="panel panel-default">
@@ -23,6 +23,7 @@
                         </fieldset>
                         </form>
                         <span>Need an account, click here to <router-link to="/register">register</router-link> </span>
+                        <div class="error" v-if="error">{{error}}</div>
                         <hr/>
                         <center><h4>OR</h4></center>
                         <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with google">
