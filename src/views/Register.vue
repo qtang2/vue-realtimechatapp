@@ -1,47 +1,55 @@
 <template>
-    <div class="outer-conatiner">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Register </h3>
-                    </div>
-                    <div class="panel-body">
-                        <form accept-charset="UTF-8" role="form" @submit.prevent="signUp">
-                        <fieldset>
-                            <div class="form-group">
-                                <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text" required>
+    <div class="outter_container">
+        <div>
+            <h1>Welcome to Qian's Chatting Web :)</h1>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Register </h3>
+                        </div>
+                        <div class="panel-body">
+                            <form accept-charset="UTF-8" role="form" @submit.prevent="signUp">
+                            <fieldset>
+                                <div class="form-group">
+                                    <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text" required>
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <input v-model="username" class="form-control" placeholder="username" name="username" type="text" required>
+                                    
+                                </div>
+                                <div class="form-group">
+                                    <input v-model="password" class="form-control" placeholder="Password" name="password" type="password" value="" required>
+                                </div>
                                 
-                            </div>
-                            <div class="form-group">
-                                <input v-model="username" class="form-control" placeholder="username" name="username" type="text" required>
-                                
-                            </div>
-                            <div class="form-group">
-                                <input v-model="password" class="form-control" placeholder="Password" name="password" type="password" value="" required>
-                            </div>
-                            
-                            <input class="btn btn-lg btn-success btn-block" type="submit" value="Sign Up">
-                        </fieldset>
-                        </form>
+                                <input class="btn btn-lg btn-success btn-block" type="submit" value="Sign Up">
+                            </fieldset>
+                            </form>
 
-                        <span>Have an account, click here to <router-link to="/login">login</router-link> </span>
-                        <div class="error" v-if="error">{{error}}</div>
+                            <span>Have an account, click here to <router-link to="/login">login</router-link> </span>
+                            <div class="error" v-if="error">{{error}}</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <page-footer />
+
     </div>
-    
-</div>
   
 </template>
 
 <script>
 import firebase from 'firebase/app'
 import 'firebase/auth'
+import Footer from '../components/Footer'
 export default {
+    components:{
+        'page-footer':Footer
+    },
     data(){
         return {
             error:"",

@@ -24,7 +24,7 @@ export default {
         },
         deleteContact(){
             console.log("delecoonnn")
-            this.$store.dispatch('deleteContact',this.toDeleteContact)
+            this.$store.dispatch('deleteContact')
             this.closeDeleteModal()
             
         }

@@ -1,7 +1,9 @@
 <template>
-<div class="outer-conatiner">
-    <div class="container">
-        
+<div class="outter_container">
+    <div>
+        <h1>Welcome to Qian's Chatting Web :)</h1>
+    </div>
+    <div class="container">        
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
                 <div class="panel panel-default">
@@ -12,13 +14,11 @@
                         <form accept-charset="UTF-8" role="form" @submit.prevent="loginWithEmail">
                         <fieldset>
                             <div class="form-group">
-                                <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text" required>
-                                
+                                <input v-model="email" class="form-control" placeholder="yourmail@example.com" name="email" type="text" required>                                
                             </div>
                             <div class="form-group">
                                 <input v-model="password" class="form-control" placeholder="Password" name="password" type="password" value="" required>
-                            </div>
-                            
+                            </div>                            
                             <input class="btn btn-lg btn-success btn-block" type="submit" value="Login">
                         </fieldset>
                         </form>
@@ -26,13 +26,13 @@
                         <div class="error" v-if="error">{{error}}</div>
                         <hr/>
                         <center><h4>OR</h4></center>
-                        <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with google">
-                        
+                        <input @click="loginWithGoogle" class="btn btn-lg btn-google btn-block" type="submit" value="Login with google">                        
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <page-footer />
 </div>
     
 </template>
@@ -40,8 +40,12 @@
 <script>
 import firebase from 'firebase/app'
 import "firebase/auth";
+import Footer from '../components/Footer'
 
 export default {
+    components:{
+        'page-footer':Footer,
+    },
     data(){
         return{
             email:"",
@@ -69,7 +73,7 @@ export default {
                             email: user.email,
                             photoURL: user.photoURL
                         })
-                        this.$router.push('/')
+                        this.$router.replace('/')
                     }).catch((error) => {
                         var errorMessage = error.message;
                         console.log(errorMessage)

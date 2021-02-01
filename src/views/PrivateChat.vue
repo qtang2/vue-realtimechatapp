@@ -39,7 +39,8 @@
                   <add-contact-modal  @closeModal="closeModal" />
                 </div>
                 <div v-else-if="allContacts.length===0">
-                  <p>No contacts :O</p>
+                  <p>No contacts :O </p>
+                  <p>Add contact to start chatting, e.g. Qian Tang</p>
                 </div>
                 <div v-else v-for="contact in allContacts" :key="contact.id" @mousedown="startTiming" @mouseup="endTiming(contact)" class="chat_list" :class="{active_chat: contact.id === activeChatter.id}" >
                   <div class="chat_people" >
@@ -56,14 +57,15 @@
             <div class="mesgs">
             <div class="msg_history">
               <div v-for="messageObj in chatHistory" :key="messageObj.id">
-                <div v-if="messageObj.author !== authUser.displayName" class="incoming_msg">
+                <div v-if="messageObj.author === activeChatter.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
-                    <img :src="activeChatter.photoURL?activeChatter.photoURL: defaultPhotoURL" alt="profile img"> 
+                    <img :src="activeChatter.photoURL" alt="profile img"> 
                   </div>
                   <div class="received_msg">
                     <div class="received_withd_msg">
                       <p>{{messageObj.message}}</p>
-                      <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
+                      <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} | {{messageObj.author}}</span>
+                      <br>
                     </div>
                   </div>
               </div>
@@ -73,7 +75,7 @@
                     <div class="sent_info">
                       <div class="sent_withd_msg">
                         <p>{{messageObj.message}}</p>
-                        <span class="time_date"> {{messageObj.createdAt}} | {{messageObj.author}}</span>
+                        <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} | {{messageObj.author}}</span>
                       </div>
                       <div class="outgoing_msg_img"> 
                         <img :src="authUser.photoURL" alt="profile img"> 
@@ -94,6 +96,7 @@
             </div>
         </div>
       </div>
+      <page-footer />
     </div>
 </template>
 
@@ -102,12 +105,14 @@ import firebase from 'firebase'
 import SignOut from '../components/SignOut'
 import DeleteContactModal from '../components/DeleteContactModal'
 import AddContactModal from '../components/AddContactModal'
+import Footer from '../components/Footer'
 
 export default {
   components:{
     'sign-out':SignOut,
     'delete-contact-modal':DeleteContactModal,
-    'add-contact-modal': AddContactModal
+    'add-contact-modal': AddContactModal,
+    'page-footer':Footer
   },
     data(){
         return {
@@ -124,7 +129,7 @@ export default {
     computed:{
       authUser(){ return this.$store.state.authUser},
       allContacts(){ return this.$store.state.allContacts},
-      chatHistory(){return this.$store.state.chatHistory},
+      chatHistory(){ return this.$store.state.chatHistory},
       activeChatter(){return this.$store.state.activeChatter},
       defaultPhotoURL(){ return this.$store.state.defaultPhotoURL}
     },
@@ -138,7 +143,9 @@ export default {
           this.showDeleteModal = true
           this.$store.dispatch('setToDeleteContact',contact)
         }else{
-          this.displayChatHistory(contact)
+          this.message = ""       
+          this.$store.dispatch('displayChatHistory',contact)
+          this.scrollToBottom()
         }
       },
       
@@ -159,15 +166,10 @@ export default {
         })
 
       },
-      displayChatHistory(activeChatter){
-        this.message = ""        
-        this.$store.dispatch('displayChatHistory',activeChatter)
-        this.scrollToBottom()
-      },
       sendMessage(){
         if(this.message){
-          this.$store.dispatch('sendMessage',this.message)
-          this.scrollToBottom();
+          this.$store.dispatch('scrollToBottom',document.querySelector('.msg_history'))
+          this.$store.dispatch('sendMessage',this.message)          
           this.message = "" 
         }else{
           return 
@@ -176,14 +178,13 @@ export default {
       },
       //TODO: Need to fix scroll to bottom problem, now have to click  twice to scroll to bottom 
       scrollToBottom(){
-        let box = document.querySelector('.msg_history');
-        box.scrollTop = box.scrollHeight
-        console.log('scroll to bottom '+ box.scrollHeight)
+        let msgHistoryBox = document.querySelector('.msg_history')
+        msgHistoryBox.scrollTop = msgHistoryBox.scrollHeight
+        console.log('scroll to bottom '+ msgHistoryBox.scrollHeight)
       },
         
     },
-    created(){
-      console.log('created')
+    created(){      
       firebase.auth().onAuthStateChanged((user)=>{
         if(user){
           let authUser = {
@@ -199,12 +200,17 @@ export default {
       }
       })
         
-    },
-    
+    },    
 }
 </script>
 
 <style>
+body{
+  background-color: #DCE9F5;
+}
+.outter_container{
+  margin-top: 5vh;
+}
 .msg_history {
   padding-top: 10px;
   height: 516px;
@@ -233,7 +239,7 @@ export default {
   opacity: 0;
 }
 .close_add_btn{
-  background: #f8f8f8 none repeat scroll 0 0;
+  background:  none repeat scroll 0 0;
   border: medium none;
   border-radius: 50%;
   cursor: pointer;
@@ -247,13 +253,10 @@ export default {
   color: rgb(243, 67, 97);
   font-size: 22px;
 }
-.modal-overlay{
-  background-color: #f8f8f8;
-}
 .container{max-width:1170px; margin:auto;}
-img{ max-width:100%;}
+img{ max-width:100%;border-radius: 50%;}
 .inbox_people {
-  background: #f8f8f8 none repeat scroll 0 0; /* f8f8f8*/
+  background: none repeat scroll 0 0; /* f8f8f8*/
   float: left;
   overflow: hidden;
   width: 40%; border-right:1px solid #c4c4c4;
@@ -279,13 +282,16 @@ img{ max-width:100%;}
   font-size: 21px;
   margin: auto;
 }
-.srch_bar input{ border:1px solid #cdcdcd; border-width:0 0 1px 0; width:100%; padding:2px 0 4px 6px; background:none;}
+.srch_bar input{ border:1px solid #cdcdcd; border-width:0 0 1px 0; width:100%; padding:2px 0 4px 6px; background:none; outline:none;}
 .srch_bar .input-group-addon button {
   background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
   border: medium none;
   padding: 0;
   color: #707070;
   font-size: 18px;
+  outline:none;
+}
+.srch_bar button {
   outline:none;
 }
 .srch_bar .input-group-addon { margin: 0 0 0 -27px;}
@@ -301,20 +307,16 @@ img{ max-width:100%;}
 .chat_img {
   float: left;
   width: 11%;
-  /* background-color: grey; */
 }
 .chat_ib {
   float: left;
   padding: 0 0 0 15px;
   width: 88%;
-  /* margin-top: 3.5%; */
-  /* background-color: teal; */
 }
 
 .chat_people{ 
   overflow:hidden; 
   clear:both;
-  /* background-color: hotpink; */
 }
 .chat_delete{
   float: left;
@@ -325,11 +327,10 @@ img{ max-width:100%;}
   border-bottom: 1px solid #c4c4c4;
   margin: 0;
   padding: 18px 16px 10px;
-  /* background-color: teal; */
 }
 .inbox_chat { height: 550px; overflow-y: scroll;position: relative;}
 
-.active_chat{ background:#ebebeb;}
+.active_chat{ background:#F5F5F5;}
 
 .incoming_msg{
   margin-left: -5px;
@@ -348,11 +349,10 @@ img{ max-width:100%;}
   padding: 0 0 0 10px;
   vertical-align: top;
   width: 92%;
-  /* background-color: teal; */
  }
 
  .received_withd_msg p {
-  background: #ebebeb none repeat scroll 0 0;
+  background: #F5F5F5 none repeat scroll 0 0;
   border-radius: 3px;
   color: #646464;
   font-size: 14px;
@@ -384,7 +384,7 @@ img{ max-width:100%;}
 }
 
  .sent_msg p {
-  background: #05728f none repeat scroll 0 0;
+  background: #6595DA none repeat scroll 0 0;
   border-radius: 3px;
   font-size: 14px;
   margin: 0; color:#fff;
@@ -403,8 +403,11 @@ img{ max-width:100%;}
   font-size: 15px;
   min-height: 48px;
   width: 100%;
+  outline: none;
 }
-
+.input_msg_write button {
+  outline: none;
+}
 .type_msg {border-top: 1px solid #c4c4c4;position: relative;}
 
 .add_contact_btn{

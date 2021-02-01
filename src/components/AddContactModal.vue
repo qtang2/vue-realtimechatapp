@@ -4,13 +4,12 @@
       <div class="heading_srch">
         <div class="srch_bar">
           <div class="stylish-input-group">
-            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Find a user by name" @keyup.enter="findUsers">
+            <input v-model="userToFind" type="text" class="search-bar"  placeholder="Input username" @keyup.enter="findUsers">
             <span class="input-group-addon">
             <button @click="findUsers" type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
             </span>
           </div>
-          <button @click="closeModal" class="close_add_btn" type="button"><i class="fa fa-window-close" aria-hidden="true"></i></button>
-          
+          <button @click="closeModal" class="close_add_btn" type="button"><i class="fa fa-window-close" aria-hidden="true"></i></button>          
         </div>
       </div>
       <div class="search_result_container">

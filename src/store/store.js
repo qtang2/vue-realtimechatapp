@@ -37,7 +37,6 @@ export const store = new Vuex.Store({
   },
   mutations: {
     //mutations must have state as the first arg
-
     findUsers:(state,foundUsers) =>{
       state.findUserHintMsg = ""
       state.foundUsers = foundUsers
@@ -47,35 +46,37 @@ export const store = new Vuex.Store({
         console.log('Sorry, user not exist')
       }
       
+    },    
+    displayChatHistory: (state,chatHistory) =>{
+      state.chatHistory = chatHistory
     },
-    setActiveChatter:(state,activeChatter) =>{
-      console.log('set activeeeeeeeeeee')
-      state.activeChatter = activeChatter
-    },
-    displayChatHistory: (state,chatHistory) =>{state.chatHistory = chatHistory
-    },
-    fetchContacts: (state,allContacts)=>{state.allContacts = allContacts
-    }, 
-    setAuthUser:(state,user)=>{state.authUser = user
-    },
-    setToDeleteContact: (state,toDeleteContact) =>{state.toDeleteContact = toDeleteContact
-    },
+    fetchContacts: (state,allContacts)=>{state.allContacts = allContacts}, 
+    setActiveChatter:(state,activeChatter) =>{state.activeChatter = activeChatter},
+    setAuthUser:(state,user)=>{state.authUser = user},
+    setToDeleteContact: (state,toDeleteContact) =>{state.toDeleteContact = toDeleteContact},
+    setFindUserHintMsg: (state,findUserHintMsg) =>{state.findUserHintMsg = findUserHintMsg},
     resetFoundUsers:(state)=>{state.foundUsers = []},
     resetFindUserHintMsg:(state)=>{state.findUserHintMsg = "" },
     resetToDeleteContact:(state)=>{state.toDeleteContact = {} },
-    signOut:(state)=>{state.authUser={}}
+    resetChatHistory:(state)=>{state.chatHistory = [] },
+    resetActiveChatter:(state)=>{state.activeChatter = {} },
+    signOut:(state)=>{
+      state.authUser={}
+      state.activeChatter = {}
+      state.allContacts=[],
+      state.chatHistory=[],
+      state.foundUsers=[],
+      state.findUserHintMsg="",
+      state.toDeleteContact={}
+    }
   },
-
 
   actions: {
     signOut:({commit})=>{
       firebase.auth().signOut()
               .then(()=>{
                 commit('signOut')
-                this.$router.replace({name:'Login'})
-                alert('Sign out successfully :)')
-                console.log('sign out successfully')
-                
+                alert('Sign out successfully :)')              
               })
               .catch((err)=>{
                   console.log(err)
@@ -85,26 +86,30 @@ export const store = new Vuex.Store({
     sendMessage:({state},message)=>{
       //Check if chose a chatter to send message
       if(Object.keys(state.activeChatter).length !== 0){
-        console.log('have active chatttter ',state.activeChatter)
         state.db.collection('chat').add({
           message: message,
           createdAt: new Date().toUTCString(),
           author: state.authUser.displayName,
           receiver: state.activeChatter.displayName
         }).then(()=>{
-            console.log("message sent :)")
+          console.log("message sent :)")
         })
       }else{
         alert('Choose one chatter to start chatting :)')
       }
       
     },
-    deleteContact:({commit,state},toDeleteContact)=>{
-      commit('setToDeleteContact',toDeleteContact)
+    deleteContact:({commit,state})=>{
+      if(state.activeChatter.displayName === state.toDeleteContact.displayName){
+        commit('resetChatHistory')
+        commit('resetActiveChatter')
+      }
       console.log('wanna delete contact ' + state.toDeleteContact.id + " for current user "+ state.authUser.uid)
 
       db.collection("contacts").doc(state.authUser.uid).collection('mycontacts').doc(state.toDeleteContact.id).delete().then(function() {
+        
         alert("Contact successfully deleted!")
+        
         console.log("Document successfully deleted!");
       }).catch(function(error) {
           console.error("Error removing document: ", error);
@@ -112,7 +117,7 @@ export const store = new Vuex.Store({
     },
     addContact:({state},userToAdd)=>{
       console.log('add this id '+  state.authUser.uid + "a new contact , which is " + userToAdd.id)
-        //search in the db and then decide to add new contacts collection in db
+      //search in the db and then decide to add new contacts collection in db
       let curUserRef = state.db.collection("contacts").doc(state.authUser.uid)
       let newContactRef = curUserRef.collection('mycontacts').doc(userToAdd.id)
 
@@ -140,7 +145,8 @@ export const store = new Vuex.Store({
     },
     findUsers: ({commit,state},userToFind)=>{
       console.log("we want to find userrrrr  " + userToFind)
-      state.db.collection('users')
+      if(userToFind!==""){
+        state.db.collection('users')
         .where("displayName","==",userToFind)
         .get()
         .then((users)=>{ 
@@ -161,11 +167,15 @@ export const store = new Vuex.Store({
                 console.log('Not found any user')
               }
         })
+      }else{
+        commit('setFindUserHintMsg',"Input username to find one :)")
+      }
+      
     },
-    //TODO: Need to fix mutual contact problem and how to set active chatter at first
     displayChatHistory:({commit, state},activeChatter) =>{
-        //set current active chat 
+        //set current active chat,and clear current chat history 
         commit('setActiveChatter',activeChatter)
+        commit('resetChatHistory')
 
         //get all messages from current user to chatter
         state.db.collection('chat')
@@ -197,9 +207,8 @@ export const store = new Vuex.Store({
                   if(Date.parse(obj1.createdAt) < Date.parse(obj2.createdAt)) return -1;
                   return 0;
                 })
-
-                // console.log('chat history ', chatHistory)
-                commit('displayChatHistory',chatHistory)                
+                commit('displayChatHistory',chatHistory)
+                             
             })
 
             
@@ -208,8 +217,7 @@ export const store = new Vuex.Store({
     },
     fetchContacts: ({commit,state}) =>{
       if(state.authUser.uid){
-        db.collection('contacts').doc(state.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{
-          
+        db.collection('contacts').doc(state.authUser.uid).collection('mycontacts').onSnapshot((querySnapshots)=>{          
           if(querySnapshots){
             let allContacts = []
             querySnapshots.forEach(d =>{
@@ -230,9 +238,7 @@ export const store = new Vuex.Store({
                     console.log("Error getting document:", error);
                 });
               })
-            // state.allContacts = allContacts
-            commit('fetchContacts',allContacts)
-            
+            commit('fetchContacts',allContacts)            
           }else{
               console.log('No such docs')
           }
