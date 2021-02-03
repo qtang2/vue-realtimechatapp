@@ -35,7 +35,7 @@
               </div>
             </div>
             <div v-else class="inbox_chat">
-                <div  v-if="showAddModal" class="add_contact_container">
+                <div v-if="showAddModal" class="add_contact_container">
                   <add-contact-modal  @closeModal="closeModal" />
                 </div>
                 <div v-else-if="allContacts.length===0">
@@ -55,7 +55,7 @@
             </div>
 
             <div class="mesgs">
-            <div class="msg_history">
+            <div class="msg_history" >
               <div v-for="messageObj in chatHistory" :key="messageObj.id">
                 <div v-if="messageObj.author === activeChatter.displayName" class="incoming_msg">
                   <div class="incoming_msg_img"> 
@@ -68,21 +68,20 @@
                       <br>
                     </div>
                   </div>
-              </div>
-              <div v-else-if="messageObj.author === authUser.displayName" class="outgoing_msg">
-                
-                  <div class="sent_msg">
-                    <div class="sent_info">
-                      <div class="sent_withd_msg">
-                        <p>{{messageObj.message}}</p>
-                        <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} by {{messageObj.author}}</span>
-                      </div>
-                      <div class="outgoing_msg_img"> 
-                        <img :src="authUser.photoURL" alt="profile img"> 
+                </div>
+                <div v-else-if="messageObj.author === authUser.displayName" class="outgoing_msg">                
+                    <div class="sent_msg">
+                      <div class="sent_info">
+                        <div class="sent_withd_msg">
+                          <p>{{messageObj.message}}</p>
+                          <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} by {{messageObj.author}}</span>
+                        </div>
+                        <div class="outgoing_msg_img"> 
+                          <img :src="authUser.photoURL" alt="profile img"> 
+                        </div>
                       </div>
                     </div>
-                  </div>
-              </div>
+                </div>
               </div>
                 
                 
@@ -130,7 +129,7 @@ export default {
       authUser(){ return this.$store.state.authUser},
       allContacts(){ return this.$store.state.allContacts},
       chatHistory(){ return this.$store.state.chatHistory},
-      activeChatter(){return this.$store.state.activeChatter},
+      activeChatter(){ return this.$store.state.activeChatter},
       defaultPhotoURL(){ return this.$store.state.defaultPhotoURL}
     },
     methods:{
@@ -145,7 +144,7 @@ export default {
         }else{
           this.message = ""       
           this.$store.dispatch('displayChatHistory',contact)
-          this.scrollToBottom()
+          this.scrollToBottom()     
         }
       },
       
@@ -170,7 +169,7 @@ export default {
         if(this.message){
           this.$store.dispatch('sendMessage',this.message)          
           this.message = "" 
-          this.scrollToBottom()
+          // this.scrollToBottom()
         }else{
           return 
         }
@@ -178,13 +177,23 @@ export default {
       },
       //TODO: Need to fix scroll to bottom problem, now have to click  twice to scroll to bottom 
       scrollToBottom(){
-        let msgHistoryBox = document.querySelector('.msg_history')
-        msgHistoryBox.scrollTop = msgHistoryBox.scrollHeight
-        console.log('scroll to bottom '+ msgHistoryBox.scrollHeight)
+          // var msgHistoryBox = this.$el.querySelector('.msg_history')
+          // // console.log(scrollTop.scrollHeight)
+          // console.log("scroll top before " + msgHistoryBox.scrollTop + ' heighttttt ' + msgHistoryBox.scrollHeight)
+          // msgHistoryBox.scrollTop = msgHistoryBox.scrollHeight-516 //516 is the msgBox height
+
+          // console.log("scroll top after " + msgHistoryBox.scrollTop + ' heighttttt ' + msgHistoryBox.scrollHeight)
+
       },
         
     },
-    created(){      
+    updated(){
+      var scrollTop = document.querySelector('.msg_history')
+      // console.log(scrollTop.scrollHeight)
+      // console.log(" top " + scrollTop.scrollTop + 'heighttttt  ' + (scrollTop.scrollHeight-516))
+      scrollTop.scrollTop = scrollTop.scrollHeight
+    },
+    created(){  
       firebase.auth().onAuthStateChanged((user)=>{
         if(user){
           let authUser = {
@@ -212,7 +221,7 @@ export default {
 .msg_history {
   padding-top: 10px;
   height: 516px;
-  overflow-y: auto;
+  overflow: scroll;
 }
 .hide_page{
   opacity: 60%;
@@ -380,8 +389,7 @@ img{ max-width:100%;border-radius: 50%;}
   padding: 30px 15px 0 25px;
   width: 60%;
 }
-
- .sent_msg p {
+.sent_msg p {
   background: #6595DA none repeat scroll 0 0;
   border-radius: 3px;
   font-size: 14px;
@@ -420,11 +428,9 @@ img{ max-width:100%;border-radius: 50%;}
   margin-left: 15px;
   outline: none;
 }
-
 .add_contact_btn i{
   color: #f8f8f8
 }
-
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
   border: medium none;

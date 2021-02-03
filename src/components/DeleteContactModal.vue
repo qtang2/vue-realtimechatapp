@@ -19,14 +19,12 @@ export default {
     },
     methods:{
         closeDeleteModal(){
-            console.log("close moooooo")
             this.$emit('closeDeleteModal')
         },
         deleteContact(){
             console.log("delecoonnn")
             this.$store.dispatch('deleteContact')
-            this.closeDeleteModal()
-            
+            this.closeDeleteModal()            
         }
     }
 

@@ -34,9 +34,7 @@ export default {
   computed:{
     foundUsers(){ return this.$store.state.foundUsers},
     findUserHintMsg(){ return this.$store.state.findUserHintMsg},
-    addable(){ 
-      console.log('adddddddd ' + this.$store.state.addable)
-      return this.$store.state.addable}
+    addable(){ return this.$store.state.addable}
   },
   data(){
     return {

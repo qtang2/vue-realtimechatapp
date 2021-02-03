@@ -217,10 +217,7 @@ export const store = new Vuex.Store({
                   return 0;
                 })
                 commit('displayChatHistory',chatHistory)
-                             
-            })
-
-            
+                })            
           })
 
     },
