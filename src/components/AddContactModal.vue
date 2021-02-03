@@ -17,7 +17,7 @@
           <div class="chat_people">
               <div class="chat_img"> <img :src="userToAdd.photoURL? userToAdd.photoURL: defaultPhotoURL"> </div>
               <div class="chat_ib">
-                <h5>{{userToAdd.displayName}} <span><button class="add_contact_btn" type="button" @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
+                <h5>{{userToAdd.displayName}} <span v-if="addable"><button class="add_contact_btn" type="button"  @click="addContact(userToAdd)"><i class="fa fa-plus" aria-hidden="true"></i></button></span></h5>
               </div>
           </div>
         </div>
@@ -33,7 +33,10 @@ export default {
   
   computed:{
     foundUsers(){ return this.$store.state.foundUsers},
-    findUserHintMsg(){ return this.$store.state.findUserHintMsg}
+    findUserHintMsg(){ return this.$store.state.findUserHintMsg},
+    addable(){ 
+      console.log('adddddddd ' + this.$store.state.addable)
+      return this.$store.state.addable}
   },
   data(){
     return {

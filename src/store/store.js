@@ -33,19 +33,22 @@ export const store = new Vuex.Store({
     activeChatter:{},
     foundUsers:[],
     findUserHintMsg:"",
-    toDeleteContact:{}
+    toDeleteContact:{},
+    addable:true
   },
   mutations: {
     //mutations must have state as the first arg
     findUsers:(state,foundUsers) =>{
+      state.addable = true
       state.findUserHintMsg = ""
       state.foundUsers = foundUsers
       //Only one result cound be found 
       if(state.foundUsers.length<1){
         state.findUserHintMsg = "Sorry, user not exist"
         console.log('Sorry, user not exist')
+      }else if(state.foundUsers[0].displayName === state.authUser.displayName){
+        state.addable = false
       }
-      
     },    
     displayChatHistory: (state,chatHistory) =>{
       state.chatHistory = chatHistory
@@ -55,6 +58,8 @@ export const store = new Vuex.Store({
     setAuthUser:(state,user)=>{state.authUser = user},
     setToDeleteContact: (state,toDeleteContact) =>{state.toDeleteContact = toDeleteContact},
     setFindUserHintMsg: (state,findUserHintMsg) =>{state.findUserHintMsg = findUserHintMsg},
+    // disableAdd:(state)=>{state.addable = false
+    // console.log("addable now is ", state.addable)},
     resetFoundUsers:(state)=>{state.foundUsers = []},
     resetFindUserHintMsg:(state)=>{state.findUserHintMsg = "" },
     resetToDeleteContact:(state)=>{state.toDeleteContact = {} },
@@ -115,8 +120,8 @@ export const store = new Vuex.Store({
           console.error("Error removing document: ", error);
       });
     },
-    addContact:({state},userToAdd)=>{
-      console.log('add this id '+  state.authUser.uid + "a new contact , which is " + userToAdd.id)
+    addContact:({commit,state},userToAdd)=>{
+      
       //search in the db and then decide to add new contacts collection in db
       let curUserRef = state.db.collection("contacts").doc(state.authUser.uid)
       let newContactRef = curUserRef.collection('mycontacts').doc(userToAdd.id)
@@ -142,10 +147,12 @@ export const store = new Vuex.Store({
             
           }
         })
+      
     },
     findUsers: ({commit,state},userToFind)=>{
       console.log("we want to find userrrrr  " + userToFind)
       if(userToFind!==""){
+        
         state.db.collection('users')
         .where("displayName","==",userToFind)
         .get()
@@ -167,6 +174,8 @@ export const store = new Vuex.Store({
                 console.log('Not found any user')
               }
         })
+        
+        
       }else{
         commit('setFindUserHintMsg',"Input username to find one :)")
       }

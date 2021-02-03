@@ -37,7 +37,6 @@
             </div>
         </div>
         <page-footer />
-
     </div>
   
 </template>

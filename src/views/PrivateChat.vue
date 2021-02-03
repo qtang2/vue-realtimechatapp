@@ -64,7 +64,7 @@
                   <div class="received_msg">
                     <div class="received_withd_msg">
                       <p>{{messageObj.message}}</p>
-                      <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} | {{messageObj.author}}</span>
+                      <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} by {{messageObj.author}}</span>
                       <br>
                     </div>
                   </div>
@@ -75,7 +75,7 @@
                     <div class="sent_info">
                       <div class="sent_withd_msg">
                         <p>{{messageObj.message}}</p>
-                        <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} | {{messageObj.author}}</span>
+                        <span class="time_date"> {{messageObj.createdAt.slice(0,22)}} by {{messageObj.author}}</span>
                       </div>
                       <div class="outgoing_msg_img"> 
                         <img :src="authUser.photoURL" alt="profile img"> 
@@ -168,9 +168,9 @@ export default {
       },
       sendMessage(){
         if(this.message){
-          this.$store.dispatch('scrollToBottom',document.querySelector('.msg_history'))
           this.$store.dispatch('sendMessage',this.message)          
           this.message = "" 
+          this.scrollToBottom()
         }else{
           return 
         }
@@ -205,9 +205,7 @@ export default {
 </script>
 
 <style>
-body{
-  background-color: #DCE9F5;
-}
+
 .outter_container{
   margin-top: 5vh;
 }
@@ -333,7 +331,7 @@ img{ max-width:100%;border-radius: 50%;}
 .active_chat{ background:#F5F5F5;}
 
 .incoming_msg{
-  margin-left: -5px;
+  margin-left: -1px;
 }
 .incoming_msg_img {
   display: inline-block;
