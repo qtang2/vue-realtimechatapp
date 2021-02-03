@@ -175,22 +175,14 @@ export default {
         }
         
       },
-      //TODO: Need to fix scroll to bottom problem, now have to click  twice to scroll to bottom 
+      //TODO: Need to improve 
       scrollToBottom(){
-          // var msgHistoryBox = this.$el.querySelector('.msg_history')
-          // // console.log(scrollTop.scrollHeight)
-          // console.log("scroll top before " + msgHistoryBox.scrollTop + ' heighttttt ' + msgHistoryBox.scrollHeight)
-          // msgHistoryBox.scrollTop = msgHistoryBox.scrollHeight-516 //516 is the msgBox height
-
-          // console.log("scroll top after " + msgHistoryBox.scrollTop + ' heighttttt ' + msgHistoryBox.scrollHeight)
 
       },
         
     },
     updated(){
       var scrollTop = document.querySelector('.msg_history')
-      // console.log(scrollTop.scrollHeight)
-      // console.log(" top " + scrollTop.scrollTop + 'heighttttt  ' + (scrollTop.scrollHeight-516))
       scrollTop.scrollTop = scrollTop.scrollHeight
     },
     created(){  
