@@ -12,7 +12,11 @@ export default {
     firebase.auth().onAuthStateChanged((user)=>{
       if(!user){
         console.log("No user at all, then go to login page")
-        this.$router.replace('/login')
+        if(this.$route.path === '/login'){
+          return 
+        }else{
+          this.$router.replace('/login')
+        }
       }else if(this.$route.path == '/login' || this.$route.path == '/register'){
         console.log("already logged in then go to home page", user)
         this.$router.replace('/')
