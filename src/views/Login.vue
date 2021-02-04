@@ -2,6 +2,7 @@
 <div class="outter_container">
     <div>
         <h1>Welcome to Qian's Chatting Web :)</h1>
+        <p>Example User : test222@gmail.com, pw: test222</p>
     </div>
     <div class="container">        
         <div class="row">
