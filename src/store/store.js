@@ -57,8 +57,6 @@ export const store = new Vuex.Store({
     setAuthUser:(state,user)=>{state.authUser = user},
     setToDeleteContact: (state,toDeleteContact) =>{state.toDeleteContact = toDeleteContact},
     setFindUserHintMsg: (state,findUserHintMsg) =>{state.findUserHintMsg = findUserHintMsg},
-    // disableAdd:(state)=>{state.addable = false
-    // console.log("addable now is ", state.addable)},
     resetFoundUsers:(state)=>{state.foundUsers = []},
     resetFindUserHintMsg:(state)=>{state.findUserHintMsg = "" },
     resetToDeleteContact:(state)=>{state.toDeleteContact = {} },

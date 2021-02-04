@@ -117,13 +117,10 @@ export default {
             
         }
     }
-
-
 }
 </script>
 
 <style scoped>
-
 .container{
     margin-left: 35%;
     padding: 4px;
@@ -132,7 +129,4 @@ export default {
     color:#000;
     background-color:#fff;
 }
-
-
-
 </style>

@@ -1,5 +1,4 @@
 <template>
-
  <transition name="fade" appear>
         <div>
         <p>Delete ' {{toDeleteContact.displayName}} ' ? </p>
@@ -7,13 +6,10 @@
         <button class="btn btn-default btn-sm" type="button" v-on:click="closeDeleteModal">Cancel</button>
         </div>
     </transition>
-
-   
 </template>
 
 <script>
-export default {
-    
+export default {    
     computed:{
         toDeleteContact(){return this.$store.state.toDeleteContact}
     },

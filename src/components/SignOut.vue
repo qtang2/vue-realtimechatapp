@@ -25,13 +25,8 @@ export default {
 .signout-head{
     display: flex;
     margin-left: 75%;
-    /* background-color: pink; */
-
 }
 .signout-head span{
     align-self: center;
-    /* background-color: green; */
 }
-
-
 </style>
