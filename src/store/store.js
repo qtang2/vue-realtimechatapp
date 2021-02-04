@@ -45,7 +45,6 @@ export const store = new Vuex.Store({
       //Only one result cound be found 
       if(state.foundUsers.length<1){
         state.findUserHintMsg = "Sorry, user not exist"
-        console.log('Sorry, user not exist')
       }else if(state.foundUsers[0].displayName === state.authUser.displayName){
         state.addable = false
       }
@@ -150,9 +149,7 @@ export const store = new Vuex.Store({
       
     },
     findUsers: ({commit,state},userToFind)=>{
-      console.log("we want to find userrrrr  " + userToFind)
-      if(userToFind!==""){
-        
+      if(userToFind!==""){        
         state.db.collection('users')
         .where("displayName","==",userToFind)
         .get()
